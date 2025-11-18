@@ -20,6 +20,15 @@ function Navbar() {
                     Cart ({cartItemCount})
                 </Link>
 
+                {/* --- TEST LINKS (REMOVE LATER) --- */}
+                <Link to="/admin/retailer" style={{ color: 'red' }}>
+                    Retailer Admin
+                </Link>
+                <Link to="/admin/wholesaler" style={{ color: 'blue' }}>
+                    Wholesaler Admin
+                </Link>
+                {/* --- END OF TEST LINKS --- */}
+
                 <Link to="/login" className="nav-login-btn">
                     Sign In
                 </Link>
