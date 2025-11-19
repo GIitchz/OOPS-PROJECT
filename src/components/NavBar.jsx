@@ -8,15 +8,12 @@ import './NavBar.css';
 import { AuthContext } from '../context/AuthContext';
 
 function Navbar() {
-  const { cartItems } = useCart();
-  const cartItemCount = cartItems.length;
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
 
-  const handleAuthClick = () => {
-    if (user) navigate('/profile');
-    else navigate('/login');
-  };
+  const { cartItems } = useCart();
+  const cartItemCount = cartItems.reduce((total, item) => {
+      return total + item.quantity;
+  }, 0);
 
   return ( 
     <nav className="navbar">
@@ -24,11 +21,18 @@ function Navbar() {
      <div className="navbar-links">
      <Link to="/dashboard">Products</Link> 
      <Link to="/cart"> Cart ({cartItemCount}) </Link> 
-    
-        
-     <button onClick={handleAuthClick}>
-        {user ? 'Profile' : 'Sign In'}
-      </button>
+      {/* --- TEST LINKS (REMOVE LATER) --- */}
+      <Link to="/admin/retailer" style={{ color: 'red' }}>
+          Retailer Admin
+      </Link>
+      <Link to="/admin/wholesaler" style={{ color: 'blue' }}>
+          Wholesaler Admin
+      </Link>
+      {/* --- END OF TEST LINKS --- */}
+
+      <Link to={(user)?"/profile":"/login"} className="nav-login-btn">
+          {(user)?"Profile":"Log In"}
+      </Link>
      </div> 
      </nav>
     );

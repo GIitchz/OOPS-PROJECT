@@ -1,0 +1,105 @@
+/* MAIN LAYOUT */
+.pd-container {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr 1fr;
+    gap: 40px;
+    padding: 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* LEFT — Images */
+.pd-images {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.pd-main-image {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+/* CENTER — Details */
+.pd-details {
+    padding-right: 20px;
+}
+
+.pd-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.pd-price {
+    font-size: 28px;
+    color: #0a8a0a;
+    margin-bottom: 20px;
+}
+
+.pd-stock.in {
+    color: green;
+    margin-bottom: 15px;
+}
+
+.pd-stock.out {
+    color: red;
+    margin-bottom: 15px;
+}
+
+.pd-description {
+    line-height: 1.5;
+    font-size: 16px;
+    color: #333;
+}
+
+/* RIGHT — BUY BOX */
+.pd-buybox {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 12px;
+    height: fit-content;
+    position: sticky;
+    top: 90px;
+}
+
+.pd-price-buybox {
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: #0a8a0a;
+}
+
+.pd-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.pd-btn.add {
+    background: #ffd814;
+}
+
+.pd-btn.buy-now {
+    background: #ffa41c;
+}
+
+.pd-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pd-stock-buybox.in {
+    color: green;
+    margin-top: 10px;
+}
+
+.pd-stock-buybox.out {
+    color: red;
+    margin-top: 10px;
+}

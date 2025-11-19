@@ -73,3 +73,8 @@
     background-color: #aaa;
     cursor: not-allowed;
 }
+
+.product-card-link {
+    text-decoration: none;
+    color: inherit;
+}

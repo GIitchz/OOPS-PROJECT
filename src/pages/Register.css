@@ -63,17 +63,19 @@ body {
     display: flex;
     gap: 10px;
 }
+
 .next {
     min-width: 0;
     flex: 1 1 0;
 }
+
 .prev {
     min-width: 0;
     flex: 1 1 0;
 }
 
 .submit-btn {
-    min-width:0;
+    min-width: 0;
     color: #fff;
     background-color: #007bff;
     flex: 1 1 0;
