@@ -5,7 +5,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from '../context/AuthContext';
 import './Profile.css'; // optional styling file
 
-function Profile() {
+function ProfilePage() {
   const navigate = useNavigate();
   const { user, loading, setUser, setSession} = useContext(AuthContext);
 
@@ -41,4 +41,4 @@ function Profile() {
   );
 }
 
-export default Profile;
+export default ProfilePage;

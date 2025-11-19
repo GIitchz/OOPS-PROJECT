@@ -1,50 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Supabase from '../utils/Database';
 import './Login.css';
+import TextDivider from '../components/TextDivider';
+import { AuthContext } from '../context/AuthContext';
+
+import Supabase from '../utils/Database';
+
 
 function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
-
-    // handle Email/Password Login
+    const { setLoading, setSession } = useContext(AuthContext);
+    const nav = useNavigate();
+    
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setError('');
-
-        const { data, error } = await Supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-
-        if (error) {
-            console.error('Login failed:', error.message);
-            setError(error.message);
+        const {data, error} = await Supabase.auth.signInWithPassword({email:email, password:password});
+        if(error){
+            console.error("login failed: ",error);
         } else {
-            console.log('Login successful:', data);
-            navigate('/'); // send user to homepage on success
+            setLoading();
+            setSession(data.session);
+            nav('/');
         }
     };
-
-    // handle Google Login
-    const handleGoogleLogin = async () => {
-        const { error } = await Supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: "http://localhost:5173/" }
-        });
-        if (error) {
-            console.error('Google Sign in failed:', error);
+    
+    const handle3rdPartyLogin = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        const fetchUserData = async () => {
+            const {data, error} = await Supabase.auth.signInWithOAuth({provider:"google", options:{redirectTo:"http://localhost:5173/"}});
+            if(error) {console.error("Sign in failed: ",error);}
         }
-    };
-
+        fetchUserData();
+    }
+    
     return (
         <div className="login-container">
             <form className="login-form" onSubmit={handleSubmit}>
                 <h2>Welcome Back!</h2>
-
-                {error && <p className="error-message">{error}</p>}
 
                 <div className="form-group">
                     <label htmlFor="email">Email Address</label>
@@ -68,25 +60,18 @@ function LoginPage() {
                     />
                 </div>
 
-                <button type="submit" className="submit-btn">
-                    Login
-                </button>
+                <div className="navigation">
+                    <button type="submit" className="submit-btn">Login</button>
+                </div>
 
-                <p style={{ textAlign: 'center', margin: '1rem 0' }}>or</p>
-
-                <button
-                    type="button"
-                    className="submit-btn google"
-                    onClick={handleGoogleLogin}
-                    style={{ backgroundColor: '#db4437' }}
-                >
-                    Continue with Google
-                </button>
-
-                <p className="register-link">
-                    New to Live MART? <Link to="/register">Create an account</Link>
-                </p>
+                <TextDivider text='or' textColor='#000' lineColor='#000' lineThickness={0.5}/>
+                <div className="navigation OAuth">
+                    <button type="button" className="next google" onClick={handle3rdPartyLogin}>Continue with Google</button>
+                </div>
             </form>
+            <p className="register-link">
+                New to Live MART? <Link to="/register">Create an account</Link>
+            </p>
         </div>
     );
 }
