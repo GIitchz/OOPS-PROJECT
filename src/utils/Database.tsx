@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { Database } from "./DatabaseInterfaces";
 import { UserInterface, UserDataInterface } from "./Interfaces";
 
 const SUPABASE_URL = "https://hopvgsttpmoofwlxhkbx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_1TvVZv76Cmle6-R_J8b08g_55S7cK5C";
 
-const Supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const Supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY);
 
 export const getUserDetails = async (): Promise<UserInterface | null> => {
     const { data: { session }, error: authError } = await Supabase.auth.getSession();
@@ -77,6 +78,7 @@ export const getProductById = async (productId: string) => {
 
     return {
         ...data,
+        listings: data.listings.map((i)=>({...i, productInfo: {name:data.name, image_url:data.image_url, description:data.description}})),
         lowest_price: lowestPrice,
     };
 };

@@ -4,19 +4,16 @@ import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import './Checkout.css';
 import {
-    createOrder,
-    createPayment,
-    addOrderItems,
-    createReimbursements,
-    decrementStock,
-    clearUserCart
+    createOrder
 } from "../utils/OrderDB";
-import { getUserDetails } from "../utils/Database";
+import Supabase, { getUserDetails } from "../utils/Database";
+import { useAuth } from '../context/AuthContext';
 import { getSavedAddresses, saveAddressForUser } from "../utils/AdressDB";
 import { getLatLongFromAddress } from "../utils/Geo";
 
 function CheckoutPage() {
-    const { cartItems, totalPrice, clearCart } = useCart();
+    const { cartItems, totalPrice, refreshCart } = useCart();
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     const [address1, setAddress1] = useState('');
@@ -37,14 +34,13 @@ function CheckoutPage() {
     useEffect(() => {
         // load saved addresses for user if logged in
         const loadAddresses = async () => {
-            const user = await getUserDetails();
             if (!user) return;
             const list = await getSavedAddresses(user.id);
             setSavedAddresses(list || []);
         };
 
         loadAddresses();
-    }, []);
+    }, [user]);
 
     // when user picks a saved address, populate fields
     useEffect(() => {
@@ -83,7 +79,6 @@ function CheckoutPage() {
         e.preventDefault();
         setLoading(true);
 
-        const user = await getUserDetails();
         if (!user) {
             alert("You must be logged in.");
             setLoading(false);
@@ -113,7 +108,11 @@ function CheckoutPage() {
         }
 
         // 3) create payment
-        const payment = await createPayment(totalPrice);
+        //const payment = await completePayment(totalPrice);
+        const payment = {
+            payment_ref: null,
+            mode: "offline"
+        };
         if (!payment) {
             alert("Payment creation failed.");
             setLoading(false);
@@ -122,52 +121,41 @@ function CheckoutPage() {
 
         // 4) create order - pass address fields (if your createOrder is strict and does not accept lat/lng,
         // we will update the order coords separately below)
-        const order = await createOrder(user.id, payment.payment_id, {
+        const address = {
             address1,
             address2,
             city,
             pincode,
             country
-        });
+        }
+        const order = await createOrder(user, payment, address);
         if (!order) {
             alert("Order creation failed.");
             setLoading(false);
             return;
         }
 
-        // 5) attach lat/lng to order (OrderDB should expose updateOrderLatLng; if not, add it)
-        try {
-            if (coords) {
-                // call a helper in OrderDB (updateOrderLatLng) which you should add if missing
-                // it's safe to call even if you don't store lat/lng in orders (it will fail quietly)
-                try {
-                    // dynamic import so it doesn't crash if function doesn't exist
-                    const OrderDB = await import('../utils/OrderDB');
-                    if (OrderDB.updateOrderLatLng) {
-                        await OrderDB.updateOrderLatLng(order.order_id, coords.lat, coords.lng);
-                    }
-                } catch (err) {
-                    console.warn("Could not update order coords:", err);
-                }
-            }
-        } catch (err) {
-            console.warn("Error attaching coords to order:", err);
-        }
+        // // 5) attach lat/lng to order (OrderDB should expose updateOrderLatLng; if not, add it)
+        // try {
+        //     if (coords) {
+        //         // call a helper in OrderDB (updateOrderLatLng) which you should add if missing
+        //         // it's safe to call even if you don't store lat/lng in orders (it will fail quietly)
+        //         try {
+        //             // dynamic import so it doesn't crash if function doesn't exist
+        //             const OrderDB = await import('../utils/OrderDB');
+        //             if (OrderDB.updateOrderLatLng) {
+        //                 await OrderDB.updateOrderLatLng(order.order_id, coords.lat, coords.lng);
+        //             }
+        //         } catch (err) {
+        //             console.warn("Could not update order coords:", err);
+        //         }
+        //     }
+        // } catch (err) {
+        //     console.warn("Error attaching coords to order:", err);
+        // }
 
-        // 6) insert order items
-        await addOrderItems(order.order_id, cartItems);
-
-        // 7) reimbursements to sellers
-        await createReimbursements(cartItems, order.order_id);
-
-        // 8) decrement stock
-        await decrementStock(cartItems);
-
-        // 9) clear cart in DB + local
-        await clearUserCart(user.id);
-        clearCart();
-
-        // 10) navigate to success
+        // navigate to success
+        await refreshCart(user);
         navigate("/order-success", { state: { orderId: order.order_id } });
         setLoading(false);
     };
@@ -307,8 +295,8 @@ function CheckoutPage() {
                     <h2>Your Order</h2>
 
                     {cartItems.map((item) => {
-                        const listing = item.product_listings;
-                        const product = listing.products;
+                        const listing = item.listing;
+                        const product = listing.productInfo;
 
                         return (
                             <div key={item.cart_item_id} className="summary-item">

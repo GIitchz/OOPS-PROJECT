@@ -16,7 +16,6 @@ interface AuthContextInterface {
     setUser: (user: UserInterface | null) => void;
     setSession: (session: Session | null | undefined) => void;
     setLoading: () => void;
-    stopLoading: () => void;
 };
 
 export const AuthContext = createContext<AuthContextInterface>({
@@ -25,8 +24,7 @@ export const AuthContext = createContext<AuthContextInterface>({
     loading: true,
     setUser: (user) => { },
     setSession: (session) => { },
-    setLoading: () => { },
-    stopLoading: () => { }
+    setLoading: () => { }
 });
 
 export const useAuth = () => {
@@ -38,10 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<UserInterface | null>(null);
     const [session, setSession] = useState<Session | null | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(true);
-
-    const stopLoading = () => {
-        setLoading(false);
-    };
+    const [prevSessionId, setPrevSessionId] = useState<string | null>(null);
 
     const getUserData = async (session: Session): Promise<UserInterface | null> => {
         const { data, error } = await Supabase.rpc("get_user_data", { uid: session.user.id }) as { data: UserDataInterface | null, error: any };
@@ -87,18 +82,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         const loadUserData = async () => {
-            if (session === undefined) return;
+            if (session === undefined || !session) return;
+            if (session.user.id === prevSessionId) return;
 
-            const userData = await session ? await getUserData(session!) : null;
+            const userData = await getUserData(session);
             setUser(userData);
-
             setLoading(false);
+            setPrevSessionId(session.user.id);
         }
         loadUserData();
-    }, [session]);
+    }, [session, prevSessionId]);
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, setUser, setSession, setLoading: () => { setLoading(true); }, stopLoading }}>
+        <AuthContext.Provider value={{ user, session, loading, setUser, setSession, setLoading: () => { setLoading(true); }}}>
             {children}
         </AuthContext.Provider>
     );

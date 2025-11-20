@@ -31,8 +31,8 @@ function CartPage() {
 
             <div className="cart-items-list">
                 {cartItems.map(item => {
-                    const listing = item.product_listings;
-                    const product = listing.products;
+                    const listing = item.listing;
+                    const product = listing.productInfo;
                     console.log("Listing:",listing);
                     return (
                         <div key={item.cart_item_id} className="cart-item">
@@ -51,7 +51,7 @@ function CartPage() {
 
                                 {/* Seller Name */}
                                 <p className="cart-seller">
-                                    Sold by: {listing.retailers?.name ?? "Unknown Seller"}
+                                    Sold by: {listing.seller.name}
                                 </p>
                             </div>
 
@@ -62,13 +62,13 @@ function CartPage() {
                                     min="1"
                                     value={item.quantity}
                                     onChange={(e) =>
-                                        updateQuantity(item.cart_item_id, e.target.value)
+                                        updateQuantity(item, e.target.value)
                                     }
                                     className="cart-item-quantity"
                                 />
 
                                 <button
-                                    onClick={() => removeFromCart(item.cart_item_id)}
+                                    onClick={() => removeFromCart(item)}
                                     className="cart-item-remove-btn"
                                 >
                                     Remove
