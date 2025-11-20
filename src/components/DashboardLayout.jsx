@@ -11,20 +11,18 @@ function DashboardLayout() {
     return (
         <div className="dashboard-layout">
             <nav className="dashboard-sidebar">
-                <h3>Admin Menu</h3>
+                <h3>Dashboard</h3>
 
                 {userRole === 'retailer' && (
                     <>
-                        <Link to="/admin/retailer">Dashboard</Link>
+                        <Link to="/admin/retailer/wholesale">Wholesale Market</Link>
                         <Link to="/admin/retailer/inventory">Manage Inventory</Link>
                         <Link to="/admin/retailer/orders">Customer Orders</Link>
-                        <Link to="/admin/retailer/wholesale">Wholesale Market</Link>
                     </>
                 )}
 
                 {userRole === 'wholesaler' && (
                     <>
-                        <Link to="/admin/wholesaler">Dashboard</Link>
                         <Link to="/admin/wholesaler/inventory">Manage Stock</Link>
                         <Link to="/admin/wholesaler/orders">Retailer Orders</Link>
                     </>
