@@ -1,0 +1,65 @@
+.slider-container {
+  width: 100%;
+  position: relative;
+  margin: 10px 0 25px;
+}
+
+.slider {
+  position: relative;
+  width: 100%;
+}
+
+.slider-track,
+.slider-range {
+  height: 6px;
+  border-radius: 3px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.slider-track {
+  width: 100%;
+  background: #d7d7d7;
+  z-index: 1;
+}
+
+.slider-range {
+  background: #007bff;
+  z-index: 2;
+}
+
+.thumb {
+  pointer-events: none;
+  position: absolute;
+  height: 0;
+  width: 100%;
+  outline: none;
+  top: 10px;
+  z-index: 4;
+}
+
+.thumb::-webkit-slider-thumb {
+  pointer-events: all;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  appearance: none;
+}
+
+.thumb-left {
+  z-index: 5;
+}
+
+.thumb-right {
+  z-index: 6;
+}
+
+.price-labels {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}

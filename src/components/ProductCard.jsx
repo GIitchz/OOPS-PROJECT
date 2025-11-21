@@ -34,13 +34,7 @@ function ProductCard({ product }) {
                         <p className="product-card-price unavailable">No sellers available</p>
                     )}
 
-                    <button
-                        className="add-to-cart-btn"
-                        disabled={!lowest_price}
-                        onClick={handleAddToCart}
-                    >
-                        {lowest_price ? "Add to Cart" : "Unavailable"}
-                    </button>
+
                 </div>
             </div>
         </Link>
