@@ -76,10 +76,17 @@ const RegistrationFlow = () => {
       }
       else {
         setStep(step + 1);
+
         const { error: otpError } = await Supabase.auth.signInWithOtp({
           email: formData.email,
           options: { emailRedirectTo: 'http://localhost:5173' }
         });
+
+        if (otpError) {
+          console.error("OTP sending failed: ", otpError);
+        } else {
+          console.log('User created, verification email sent.');
+        }
       }
     }
     else {

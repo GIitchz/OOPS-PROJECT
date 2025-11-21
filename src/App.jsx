@@ -54,7 +54,7 @@ function App() {
               path="/admin/retailer"
               element={<ProtectedRoute allowedRoles={['retailer']}><DashboardLayout /></ProtectedRoute>}
             >
-              <Route index element={<Navigate to="wholesale" replace />} />
+              <Route index element={<RetailerDashboard />} />
               <Route path="inventory" element={<RetailerInventory />} />
               <Route path="orders" element={<RetailerOrders />} />
               <Route path="wholesale" element={<WholesaleMarket />} />

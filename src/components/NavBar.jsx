@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import Supabase from '../utils/Database';
-import { ShoppingCart, LogOut, Store, Menu, X } from 'lucide-react';
+import { ShoppingCart, LogOut, Store, Menu, X, LayoutDashboard } from 'lucide-react';
 
 function NavBar() {
     const { cartItems } = useCart();
@@ -35,8 +35,7 @@ function NavBar() {
         <Link
             to={to}
             onClick={onClick}
-            // Change: 'hover:text-blue-600' -> 'hover:text-rose-600' and 'hover:bg-rose-50'
-            className="text-sm font-medium text-slate-600 hover:text-rose-600 transition-colors px-4 py-2 rounded-2xl hover:bg-rose-100"
+            className="text-sm font-medium text-slate-600 hover:text-rose-600 transition-colors px-4 py-2 rounded-2xl hover:bg-rose-100 flex items-center gap-2"
         >
             {children}
         </Link>
@@ -57,7 +56,6 @@ function NavBar() {
                                     {mobile && <ShoppingCart size={18} />}
                                     <span>Cart</span>
                                     {cartItemCount > 0 && (
-                                        // Change: Badge is now Rose
                                         <span className="ml-1 bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                             {cartItemCount}
                                         </span>
@@ -71,9 +69,23 @@ function NavBar() {
 
                 {isAdmin && (
                     <>
+                        {/* NEW: Explicit Dashboard Link */}
+                        <LinkItem to={landingPath} onClick={() => mobile && setIsMobileMenuOpen(false)}>
+                            {mobile && <LayoutDashboard size={18} />}
+                            Dashboard
+                        </LinkItem>
+
                         {user.role === 'retailer' && (
                             <LinkItem to="/cart" onClick={() => mobile && setIsMobileMenuOpen(false)}>
-                                Cart ({cartItemCount})
+                                <div className="flex items-center gap-2">
+                                    {mobile && <ShoppingCart size={18} />}
+                                    <span>Cart</span>
+                                    {cartItemCount > 0 && (
+                                        <span className="ml-1 bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                            {cartItemCount}
+                                        </span>
+                                    )}
+                                </div>
                             </LinkItem>
                         )}
                         <LinkItem to="/profile" onClick={() => mobile && setIsMobileMenuOpen(false)}>Profile</LinkItem>
@@ -84,10 +96,9 @@ function NavBar() {
     };
 
     return (
-        // Change: Added shadow-rose-100 for a softer shadow
         <nav className="bg-white/80 backdrop-blur-md border-b border-rose-100 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-20"> {/* Increased height slightly for cuteness */}
+                <div className="flex justify-between h-20">
 
                     <div className="flex items-center">
                         <Link to={landingPath} className="flex items-center gap-2 group">
