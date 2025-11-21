@@ -120,6 +120,7 @@ export const getProductById = async (productId: string) => {
             description,
             image_url,
             listings: product_listings (
+                product_listings_id,
                 seller_id,
                 price,
                 stock

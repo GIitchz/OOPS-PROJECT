@@ -85,3 +85,20 @@ export async function deleteSavedAddress(addressId: string) {
     }
     return true;
 }
+export async function updateOrderLatLng(orderId:number, lat:number, lng:number) {
+    const { data, error } = await Supabase
+        .from("orders")
+        .update({
+            lat: lat,
+            lng: lng,
+        })
+        .eq("order_id", orderId)
+        .select();
+
+    if (error) {
+        console.error("Failed to update order location:", error);
+        return null;
+    }
+
+    return data;
+}

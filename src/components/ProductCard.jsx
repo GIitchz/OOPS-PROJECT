@@ -4,18 +4,38 @@ import { Link } from "react-router-dom";
 import { ShoppingCart } from 'lucide-react';
 
 function ProductCard({ product }) {
-    const { name, image_url, lowest_price } = product;
+    const { name, image_url, listings, lowest_price } = product;
     const { addToCart } = useCart();
+    //console.log("Listings for product:", product.listings);
+
+    // --- Find the actual listing that matches the displayed lowest price ---
+    const bestListing =
+        listings
+            ?.filter(l => Number(l.stock) > 0)
+            ?.sort((a, b) => a.price - b.price)[0] || null;
 
     const handleAddToCart = (e) => {
         e.preventDefault();
+
+        const bestListing = product.listings
+            .filter(l => l.stock > 0)
+            .sort((a, b) => a.price - b.price)[0];
+
+        if (!bestListing) {
+            console.error("No valid listing found");
+            return;
+        }
+
         addToCart({
-            id: product.id,
+            product_listings_id: bestListing.product_listings_id,
+            product_id: product.product_id,                      
+            seller_id: bestListing.seller_id,
+            price: bestListing.price,
             name: product.name,
-            price: lowest_price,
             image_url: product.image_url,
         });
     };
+
 
     return (
         <Link to={`/product/${product.id}`} className="group block h-full">
@@ -51,7 +71,7 @@ function ProductCard({ product }) {
 
                         <button
                             onClick={handleAddToCart}
-                            disabled={!lowest_price}
+                            disabled={!bestListing}
                             className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                             title="Add to Cart"
                         >

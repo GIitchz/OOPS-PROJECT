@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { getSavedAddresses, saveAddressForUser } from "../utils/AdressDB";
 import { getLatLongFromAddress } from "../utils/Geo";
 import { MapPin, CreditCard, Truck, CheckCircle, AlertCircle } from 'lucide-react';
+import { updateOrderLatLng } from '../utils/AdressDB';
 
 function CheckoutPage() {
     const { cartItems, totalPrice, refreshCart } = useCart();
