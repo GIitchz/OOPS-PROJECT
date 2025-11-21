@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { getAllProducts, getAllRetailers } from "../utils/Database";
 import ProductCard from "../components/ProductCard";
 import "./Dashboard.css";
+import PriceSlider from "../components/priceslider";
+
 
 function DashboardPage() {
     const [products, setProducts] = useState([]);
@@ -11,19 +13,63 @@ function DashboardPage() {
     const [loading, setLoading] = useState(true);
 
     // -------- FILTER STATES --------
-    const [minPrice, setMinPrice] = useState("");
-    const [maxPrice, setMaxPrice] = useState("");
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(0);
+
     const [selectedRetailers, setSelectedRetailers] = useState([]);
     const [maxDistance, setMaxDistance] = useState("");
     const [sortType, setSortType] = useState("");
+    const [priceBounds, setPriceBounds] = useState({ min: 0, max: 5000 });
+
+
+    function extractPrice(product) {
+        if (!product.listings || product.listings.length === 0) return 0;
+        return Math.min(...product.listings.map(l => l.price || 0));
+    }
+    function productMinListingDistance(product) {
+        const dist = (product.listings || []).map(l => Number(l.distance_from_user ?? Infinity)).filter(d => !Number.isNaN(d));
+        if (dist.length === 0) return Infinity;
+        return Math.min(...dist);
+    }
 
     useEffect(() => {
         const fetchData = async () => {
             const productData = await getAllProducts();
             const retailerData = await getAllRetailers(); // Helper needed
+
+            const retailerIds = new Set(retailerData.map(r => r.user_id));
+
+            // For each product, keep only listings that belong to retailers
+            const productsWithRetailListings = (productData || []).map(p => {
+                const listings = (p.listings || []).filter(l => retailerIds.has(l.seller_id));
+                return {
+                    ...p,
+                    listings
+                };
+            })
+            // drop products that have zero retailer listings
+            .filter(p => (p.listings || []).length > 0);
+
+            const allListingPrices = [];
+            for (const p of productsWithRetailListings) {
+                for (const l of p.listings) {
+                    const price = Number(l.price ?? 0);
+                    if (!Number.isNaN(price)) allListingPrices.push(price);
+                }
+            }
+
+            const minP = allListingPrices.length ? Math.min(...allListingPrices) : 0;
+            const maxP = allListingPrices.length ? Math.max(...allListingPrices) : 0;
+
             setProducts(productData);
             setFiltered(productData);
             setRetailers(retailerData);
+
+            setPriceBounds({ min: minP, max: maxP });
+            setMinPrice(minP);
+            setMaxPrice(maxP);
+
+
             setLoading(false);
         };
 
@@ -32,47 +78,62 @@ function DashboardPage() {
 
     // -------- HANDLE RETAILER CHECKBOX --------
     const toggleRetailer = (id) => {
-        if (selectedRetailers.includes(id)) {
-            setSelectedRetailers(selectedRetailers.filter((r) => r !== id));
-        } else {
-            setSelectedRetailers([...selectedRetailers, id]);
-        }
+        setSelectedRetailers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     };
+
 
     // -------- APPLY FILTER FUNCTION --------
     const applyFilters = () => {
-        let f = [...products];
+    const minP = Number(minPrice);
+    const maxP = Number(maxPrice);
+    const distanceLimit = maxDistance ? Number(maxDistance) : null;
 
-        // PRICE FILTER
-        f = f.filter((p) => {
-            const price = p.min_price ?? p.price ?? 0;
-            if (minPrice && price < minPrice) return false;
-            if (maxPrice && price > maxPrice) return false;
+    // product passes if ANY of its retailer listings match all filters
+    const f = products.filter(product => {
+        const validListings = (product.listings || []).filter(listing => {
+            const price = Number(listing.price ?? 0);
+            const seller = listing.seller_id;
+
+            // ---- PRICE FILTER ----
+            if (price < minP || price > maxP) return false;
+
+            // ---- RETAILER FILTER ----
+            if (selectedRetailers.length > 0 && !selectedRetailers.includes(seller)) {
+                return false;
+            }
+
+            // ---- DISTANCE FILTER ----
+            if (distanceLimit !== null) {
+                const d = Number(listing.distance_from_user ?? Infinity);
+                if (d > distanceLimit) return false;
+            }
+
             return true;
         });
 
-        // RETAILER FILTER
-        if (selectedRetailers.length > 0) {
-            f = f.filter((p) => selectedRetailers.includes(p.seller_id));
-        }
+        // include product only if at least one listing is valid
+        return validListings.length > 0;
+    });
 
-        // DISTANCE FILTER  
-        // (Requires p.distance_from_user to exist — can be added later)
-        if (maxDistance) {
-            f = f.filter((p) => p.distance_from_user <= maxDistance);
-        }
+    // ---- SORTING ----
+    if (sortType === "price_asc") {
+        f.sort((a, b) => extractPrice(a) - extractPrice(b));
+    } 
+    else if (sortType === "price_desc") {
+        f.sort((a, b) => extractPrice(b) - extractPrice(a));
+    } 
+    else if (sortType === "distance") {
+        // sort by min listing distance
+        const dist = p =>
+            Math.min(
+                ...(p.listings || []).map(l => Number(l.distance_from_user ?? Infinity))
+            );
+        f.sort((a, b) => dist(a) - dist(b));
+    }
 
-        // SORTING
-        if (sortType === "price_asc") {
-            f.sort((a, b) => a.price - b.price);
-        } else if (sortType === "price_desc") {
-            f.sort((a, b) => b.price - a.price);
-        } else if (sortType === "distance") {
-            f.sort((a, b) => a.distance_from_user - b.distance_from_user);
-        }
+    setFiltered(f);
+};
 
-        setFiltered(f);
-    };
 
     if (loading) {
         return (
@@ -90,22 +151,18 @@ function DashboardPage() {
                 <h2>Filters</h2>
 
                 {/* PRICE FILTER */}
-                <div className="filter-block">
                     <h3>Price Range</h3>
-                    <input
-                        type="number"
-                        placeholder="Min Price"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                    />
-                    <input
-                        type="number"
-                        placeholder="Max Price"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                    />
-                </div>
-
+                    {minPrice !== "" && maxPrice !== "" && (
+                        <PriceSlider
+                            min={priceBounds.min}
+                            max={priceBounds.max}
+                            value={[minPrice, maxPrice]}
+                            onChange={(vals) => {
+                                setMinPrice(vals[0]);
+                                setMaxPrice(vals[1]);
+                            }}
+                        />
+                    )}
                 {/* RETAILER FILTER */}
                 <div className="filter-block">
                     <h3>Retailers</h3>
