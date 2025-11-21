@@ -10,7 +10,6 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import NavBar from './components/NavBar';
-import ProfilePage from "./pages/Profile";
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
@@ -24,6 +23,9 @@ import WholesaleMarket from './pages/WholesaleMarket';
 import WholesalerDashboard from './pages/WholesalerDashboard';
 import WholesalerOrders from './pages/WholesalerOrders';
 import WholesalerInventory from './pages/WholesalerInventory';
+
+import ProfilePage from "./pages/Profile";
+import ProfileAddressesPage from './pages/ProfileAddresses';
 
 const ALL_ROLES = ['customer', 'retailer', 'wholesaler'];
 const SELLER_ROLES = ['retailer', 'wholesaler'];
@@ -45,9 +47,11 @@ function App() {
 
             {/*Customer facing*/}
             <Route path="/cart" element={<ProtectedRoute allowedRoles={ALL_ROLES}><CartPage /></ProtectedRoute>} />
-            <Route path="/profile/*" element={<ProtectedRoute allowedRoles={ALL_ROLES}><ProfilePage /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute allowedRoles={ALL_ROLES}><CheckoutPage /></ProtectedRoute>} />
             <Route path="/order-success" element={<ProtectedRoute allowedRoles={ALL_ROLES}><OrderSuccessPage /></ProtectedRoute>} />
+
+            {/*Profile page*/}
+            <Route path="/profile/*" element={<ProtectedRoute allowedRoles={ALL_ROLES}><ProfilePage /></ProtectedRoute>} />
 
             {/* 3. ADMIN ROUTES - RETAILER (Only Retailer can access these paths) */}
             <Route
@@ -79,6 +83,11 @@ function App() {
       </CartProvider>
     </AuthProvider>
   );
+}
+
+const Test = () => {
+  console.log("hello from nested route");
+  return <h1>HI!!!!</h1>;
 }
 
 export default App;

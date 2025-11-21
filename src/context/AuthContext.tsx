@@ -37,6 +37,7 @@ export const useAuth = () => {
     return useContext(AuthContext);
 };
 
+export default useAuth;
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserInterface | null>(null);

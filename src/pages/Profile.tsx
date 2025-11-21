@@ -1,17 +1,13 @@
 import React, { useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from '../context/AuthContext';
-import Supabase from '../utils/Database';
-import { User, LogOut, ShoppingCart, Settings } from 'lucide-react';
+import { Route, Routes, useNavigate } from "react-router-dom";
+import useAuth from '../context/AuthContext';
+import { User, LogOut, ShoppingCart, Settings, MapPin, ClipboardList } from 'lucide-react';
+import ProfileAddressesPage from "./ProfileAddresses";
+import ProfileOrdersPage from "./ProfileOrders";
+import ProfileSettingsPage from "./ProfileSettings";
 
 function ProfilePage() {
-  const navigate = useNavigate();
-  const { user, loading, logout } = useContext(AuthContext);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
+  const { user, loading } = useAuth();
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
 
@@ -37,37 +33,105 @@ function ProfilePage() {
           </div>
         </div>
 
-        {/* Actions Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => navigate('/cart')}
-            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
-          >
-            <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
-              <ShoppingCart size={24} />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800">Your Cart</h3>
-              <p className="text-sm text-slate-500">View pending items</p>
-            </div>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
-          >
-            <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
-              <LogOut size={24} />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800">Sign Out</h3>
-              <p className="text-sm text-slate-500">Log out of your account</p>
-            </div>
-          </button>
-        </div>
+        <Routes>
+          <Route path="" element={<ActionGrid />} />
+          <Route path="addresses" element={<ProfileAddressesPage />} />
+          <Route path="orders" element={<ProfileOrdersPage />} />
+          <Route path="settings" element={<ProfileSettingsPage />} />
+        </Routes>
 
       </div>
     </div>
+  );
+}
+
+const ActionGrid = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
+  return (
+    <>
+      {/* Actions Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+        {/* Your Cart Button */}
+        <button
+          onClick={() => navigate('/cart')}
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+        >
+          <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+            <ShoppingCart size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Your Cart</h3>
+            <p className="text-sm text-slate-500">View pending items</p>
+          </div>
+        </button>
+
+        {/* Profile Orders Button */}
+        <button
+          onClick={() => navigate('/profile/orders')}
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+        >
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
+            <ClipboardList size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Your Orders</h3>
+            <p className="text-sm text-slate-500">View past orders</p>
+          </div>
+        </button>
+
+        {/* Profile Addresses Button */}
+        <button
+          onClick={() => navigate('/profile/addresses')}
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+        >
+          <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+            <MapPin size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Your Addresses</h3>
+            <p className="text-sm text-slate-500">Manage your saved addresses</p>
+          </div>
+        </button>
+
+        {/* Profile Settings Button */}
+        <button
+          onClick={() => navigate('/profile/settings')}
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+        >
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
+            <Settings size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Settings</h3>
+            <p className="text-sm text-slate-500">Update your profile settings</p>
+          </div>
+        </button>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+        >
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
+            <LogOut size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Sign Out</h3>
+            <p className="text-sm text-slate-500">Log out of your account</p>
+          </div>
+        </button>
+        
+      </div>
+    </>
+
   );
 }
 

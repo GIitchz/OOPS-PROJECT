@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import Supabase from '../utils/Database';
 import { ShoppingCart, LogOut, Store, Menu, X, LayoutDashboard } from 'lucide-react';
 
 function NavBar() {
@@ -42,11 +41,27 @@ function NavBar() {
     );
 
     const renderNavLinks = (mobile = false) => {
-        const Wrapper = mobile ? 'div' : React.Fragment;
-        const wrapperClass = mobile ? 'flex flex-col space-y-2' : '';
+
+        const MobWrapper = ({ children }) => {
+            return (
+                <div className='flex flex-col space-y-2'>
+                    {children}
+                </div>
+            );
+        }
+
+        const NonMobWrapper = ({ children }) => {
+            return (
+                <React.Fragment>
+                    { children }
+                </React.Fragment>
+            );
+        }
+
+        const Wrapper = mobile? MobWrapper : NonMobWrapper;
 
         return (
-            <Wrapper className={wrapperClass}>
+            <Wrapper>
                 {(!user || user.role === 'customer') && (
                     <>
                         <LinkItem to="/dashboard" onClick={() => mobile && setIsMobileMenuOpen(false)}>Products</LinkItem>
