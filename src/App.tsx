@@ -32,6 +32,12 @@ const SELLER_ROLES = ['retailer', 'wholesaler'];
 
 function App() {
   return (
+    <>
+    <script
+      async
+      defer
+      src={`https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GMAP_KEY}&libraries=places`}
+    ></script>
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
@@ -57,7 +63,7 @@ function App() {
             <Route
               path="/admin/retailer"
               element={<ProtectedRoute allowedRoles={['retailer']}><DashboardLayout /></ProtectedRoute>}
-            >
+              >
               <Route index element={<RetailerDashboard />} />
               <Route path="inventory" element={<RetailerInventory />} />
               <Route path="orders" element={<RetailerOrders />} />
@@ -69,7 +75,7 @@ function App() {
             <Route
               path="/admin/wholesaler"
               element={<ProtectedRoute allowedRoles={['wholesaler']}><DashboardLayout /></ProtectedRoute>}
-            >
+              >
               <Route index element={<WholesalerDashboard />} />
               <Route path="orders" element={<WholesalerOrders />} />
               <Route path="inventory" element={<WholesalerInventory />} />
@@ -82,12 +88,8 @@ function App() {
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>
+  </>
   );
-}
-
-const Test = () => {
-  console.log("hello from nested route");
-  return <h1>HI!!!!</h1>;
 }
 
 export default App;
