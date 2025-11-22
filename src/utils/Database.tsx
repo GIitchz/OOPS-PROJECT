@@ -84,38 +84,10 @@ export const getProductById = async (productId: string, coord?: {lat:number, lng
 };
 
 
-    export const getAllProducts = async () => {
-    const { data, error } = await Supabase
-        .from("products")
-        .select(`
-            id: product_id,
-            name,
-            description,
-            image_url,
-            listings: product_listings (
-                product_listings_id,
-                seller_id,
-                price,
-                stock
-            )
-        `);
-
-    if (error || !data) {
-        console.error("Error fetching all products:", error);
-        return [];
-    }
-
-    // Compute lowest price for each product
-    return data.map(product => {
-        const lowestPrice = product.listings?.length
-            ? Math.min(...product.listings.map(l => l.price))
-            : null;
-
-        return {
-            ...product,
-            lowest_price: lowestPrice,
-        };
-    });
+export const getAllProducts = async () => {
+    const listings = await getFilteredListings({});
+    const products = groupListingsByProduct(listings!);
+    return products;
 };
 
 export async function getAllRetailers() {

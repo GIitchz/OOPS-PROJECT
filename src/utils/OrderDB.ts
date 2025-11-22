@@ -28,6 +28,7 @@ export const getOrders = async (user: UserInterface, limit: number = 10) => {
     .from('orders')
     .select(`
         order_id,
+        ordered_at,
         order_items (
         order_id,
         listing_id,

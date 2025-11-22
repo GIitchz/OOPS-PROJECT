@@ -29,6 +29,19 @@ export const ProfileOrdersPage = () => {
       default: return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700"><Clock size={14} /> Pending</span>;
     }
   };
+  // Function to format the ordered_at date
+  const formatOrderDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    }).format(date);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -63,6 +76,8 @@ export const ProfileOrdersPage = () => {
                 <div>
                   <h3 className="text-lg font-bold text-slate-800">Order #{order.order_id}</h3>
                   <p className="text-xs text-slate-400 uppercase font-bold tracking-wide">Items: {order.order_items.length}</p>
+                  {/* Displaying the ordered_at date */}
+                  <p className="text-xs text-slate-400 font-medium">Ordered on: {formatOrderDate(order.ordered_at)}</p>
                 </div>
                 <div className="mt-2 sm:mt-0">
                   {getStatusBadge(order.order_items[0]?.order_status || 'pending')}

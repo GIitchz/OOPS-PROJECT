@@ -40,7 +40,8 @@ export type CartItemInterface = {
 }
 
 export type OrderInterface = {
-    order_id: number;
+    order_id: number,
+    ordered_at: string,
     order_items: OrderItemInterface[]
 }
 
