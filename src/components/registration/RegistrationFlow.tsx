@@ -32,9 +32,13 @@ const RegistrationFlow = () => {
       if (session) {
         const { data } = await Supabase.from("users").select().match({ user_id: session.user.id }).maybeSingle();
         if (data) {
+          // ISSUE HERE: If 'data' exists, the user is registered. 
+          // The app should navigate to the dashboard, not the profile page.
+          // This behavior might be causing unexpected redirects if the browser history is confusing the router.
           nav('/');
         }
         else {
+          // Scenario: User signed in via Google but hasn't completed Step 2 (role/location)
           setOAuthSignup(true);
           setStep(2);
           setFormData(prev => ({ ...prev, name: session.user.user_metadata.name || '' }));

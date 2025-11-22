@@ -81,7 +81,25 @@ export default function DashboardPage() {
         }
 
         const productData = groupListingsByProduct(listings);
-        const cleaned = productData;
+        let cleaned = productData;
+
+        // --- FINAL FRONT-END SORTING FIX ---
+        // Apply final sort to the grouped products array based on the filter settings
+        if (filter.orderBy === 'price') {
+            const isAsc = filter.priceAsc ?? true; // Default to true if undefined
+
+            cleaned.sort((a, b) => {
+                const priceA = a.lowest_price ?? Infinity;
+                const priceB = b.lowest_price ?? Infinity;
+
+                if (isAsc) {
+                    return priceA - priceB; // Low to High
+                } else {
+                    return priceB - priceA; // High to Low
+                }
+            });
+        }
+        // -----------------------------------
 
         // Compute price bounds safely
         const allPrices = cleaned.flatMap(p => p.listings.map(l => l.price));
@@ -136,6 +154,18 @@ export default function DashboardPage() {
             baseFilter.sellerIds = (selectedRetailers.length > 0) ? selectedRetailers : undefined;
             if (searchTerm !== "") baseFilter.searchTerm = searchTerm;
             if (maxDistance) baseFilter.maxDist = Number(maxDistance);
+
+            // --- FIXED SORTING LOGIC ---
+            if (sortType === 'price_asc') {
+                baseFilter.orderBy = 'price';
+                baseFilter.priceAsc = true;
+            } else if (sortType === 'price_desc') {
+                baseFilter.orderBy = 'price';
+                baseFilter.priceAsc = false;
+            } else {
+                baseFilter.orderBy = 'relevance'; // Default or recommended
+            }
+            // ---------------------------
         }
 
 
@@ -192,6 +222,19 @@ export default function DashboardPage() {
         if (coord) {
             filter.distFrom = coord;
         }
+
+        // --- FIXED SORTING LOGIC ---
+        const currentSortType = reset ? "" : sortType;
+        if (currentSortType === 'price_asc') {
+            filter.orderBy = 'price';
+            filter.priceAsc = true;
+        } else if (currentSortType === 'price_desc') {
+            filter.orderBy = 'price';
+            filter.priceAsc = false;
+        } else {
+            filter.orderBy = 'relevance'; // Default
+        }
+        // ---------------------------
 
         loadData(filter);
     };
