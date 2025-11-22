@@ -231,6 +231,8 @@ export default function DashboardPage() {
         } else if (currentSortType === 'price_desc') {
             filter.orderBy = 'price';
             filter.priceAsc = false;
+        } else if(currentSortType === 'distance'){
+            filter.orderBy='distance';
         } else {
             filter.orderBy = 'relevance'; // Default
         }
@@ -340,6 +342,7 @@ export default function DashboardPage() {
                                 <option value="">Recommended</option>
                                 <option value="price_asc">Price: Low to High</option>
                                 <option value="price_desc">Price: High to Low</option>
+                                <option value="distance" disabled={coord?false:true}>Nearest Distance</option>
                             </select>
                         </div>
                     </div>

@@ -43,8 +43,6 @@ function RetailerOrders() {
                 alert(`❌ INSUFFICIENT STOCK!\n\nOrder requires: ${item.quantity} units.\nYou do not have enough stock.\n\nPlease restock from the Wholesale Market first.`);
                 return;
             }
-
-            await adjustListingStock(listingId, -item.quantity);
         }
 
         // 2. Confirmation Check

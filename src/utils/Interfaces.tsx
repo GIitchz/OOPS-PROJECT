@@ -50,11 +50,14 @@ export type OrderInterface = {
 
 export type OrderItemInterface = {
     order_id: number;
+    order_item_id: number; // Make sure this exists
     listing_id: string;
     name: string;
     price: number;
     quantity: number;
     order_status: "pending" | "delivering" | "completed" | "cancelled";
+    rating?: number;
+    feedback?: string;
 }
 
 export type PaymentInterface = {

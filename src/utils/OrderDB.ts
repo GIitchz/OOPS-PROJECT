@@ -34,10 +34,13 @@ export const getOrders = async (user: UserInterface, limit: number = 10) => {
         order_items (
             order_id,
             listing_id,
+            order_item_id,
             name,
             price,
             quantity,
-            order_status
+            order_status,
+            rating,
+            feedback
         )
     `)
         .eq("buyer_id", user.id)

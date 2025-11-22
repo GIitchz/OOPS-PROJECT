@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Package, ShoppingBag, TrendingUp, LayoutDashboard, HelpCircle, Clock } from 'lucide-react';
+import { Package, ShoppingBag, TrendingUp, LayoutDashboard, HelpCircle, Clock, MessageSquare } from 'lucide-react';
 
 function DashboardLayout() {
     const { user } = useAuth();
@@ -50,6 +50,7 @@ function DashboardLayout() {
                                 <SidebarLink to="inventory" icon={Package} label="My Inventory" />
                                 <SidebarLink to="orders" icon={ShoppingBag} label="Live Orders" />
                                 <SidebarLink to="history" icon={Clock} label="Sales History" />
+                                <SidebarLink to="feedbacks" icon={MessageSquare} label="Feedbacks" />
                             </>
                         )}
 

@@ -18,6 +18,7 @@ import DashboardLayout from './components/DashboardLayout';
 import RetailerDashboard from './pages/RetailerDashboard';
 import RetailerInventory from './pages/RetailerInventory';
 import RetailerOrders from './pages/RetailerOrders';
+import RetailerFeedbacks from './pages/RetailerFeedbacks';
 import WholesaleMarket from './pages/WholesaleMarket';
 import RetailerHistory from './pages/RetailerHistory';
 
@@ -64,6 +65,7 @@ function App() {
                 <Route path="orders" element={<RetailerOrders />} />
                 <Route path="wholesale" element={<WholesaleMarket />} />
                 <Route path="history" element={<RetailerHistory />} />
+                <Route path="feedbacks" element={<RetailerFeedbacks />} />
               </Route>
 
               {/* 4. ADMIN ROUTES - WHOLESALER (Only Wholesaler can access these paths) */}
