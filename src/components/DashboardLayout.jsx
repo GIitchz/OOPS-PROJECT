@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Package, ShoppingBag, TrendingUp, LayoutDashboard, HelpCircle } from 'lucide-react';
+import { Package, ShoppingBag, TrendingUp, LayoutDashboard, HelpCircle, Clock } from 'lucide-react';
 
 function DashboardLayout() {
     const { user } = useAuth();
@@ -48,7 +48,8 @@ function DashboardLayout() {
                                 <SidebarLink to="" icon={LayoutDashboard} label="Overview" end />
                                 <SidebarLink to="wholesale" icon={TrendingUp} label="Wholesale Market" />
                                 <SidebarLink to="inventory" icon={Package} label="My Inventory" />
-                                <SidebarLink to="orders" icon={ShoppingBag} label="Customer Orders" />
+                                <SidebarLink to="orders" icon={ShoppingBag} label="Live Orders" />
+                                <SidebarLink to="history" icon={Clock} label="Sales History" />
                             </>
                         )}
 

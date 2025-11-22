@@ -63,13 +63,17 @@ function ProfilePage() {
 }
 
 const ActionGrid = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth(); // Destructure user here to check role
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
+
+  // DYNAMIC LABEL LOGIC
+  const ordersLabel = user?.role === 'retailer' ? "Wholesale Purchases" : "My Orders";
+  const ordersSubtext = user?.role === 'retailer' ? "Track inventory you bought" : "View past orders";
 
   return (
     <>
@@ -99,8 +103,9 @@ const ActionGrid = () => {
             <ClipboardList size={24} />
           </div>
           <div>
-            <h3 className="font-bold text-slate-800">Your Orders</h3>
-            <p className="text-sm text-slate-500">View past orders</p>
+            {/* Dynamic Labels */}
+            <h3 className="font-bold text-slate-800">{ordersLabel}</h3>
+            <p className="text-sm text-slate-500">{ordersSubtext}</p>
           </div>
         </button>
 

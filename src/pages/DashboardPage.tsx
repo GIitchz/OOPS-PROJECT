@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { getAllProducts, getAllRetailers, getAllWholesalers } from "../utils/Database";
+import { getAllRetailers, getAllWholesalers } from "../utils/Database";
 import ProductCard from "../components/ProductCard";
 import PriceSlider from "../components/priceslider";
 import { Check, Filter, Search } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { FilterInterface, getFilteredListings, groupListingsByProduct } from "../utils/productsDB";
-import { FilteredProductInterface, SellerInterface } from "../utils/Interfaces";
+import { FilteredProductInterface } from "../utils/Interfaces";
+
+// Match the structure returned by getAllRetailers/Wholesalers in Database.tsx
+interface Seller {
+    seller_id: string;
+    name: string;
+    user_role: string;
+}
+
 export default function DashboardPage() {
     const { user, loading: userLoading } = useAuth();
 
     const [products, setProducts] = useState<FilteredProductInterface[]>([]);
     const [filtered, setFiltered] = useState<FilteredProductInterface[]>([]);
-    const [retailers, setRetailers] = useState<SellerInterface[]>([]);
+    const [retailers, setRetailers] = useState<Seller[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingProducts, setLoadingProducts] = useState(true);
 
@@ -24,10 +32,10 @@ export default function DashboardPage() {
     const [sortType, setSortType] = useState("");
     const [priceBounds, setPriceBounds] = useState({ min: 0, max: 5000 });
 
-    const [coord, setCoord] = useState<{lat: number, lng: number}|null>(null);
+    const [coord, setCoord] = useState<{ lat: number, lng: number } | null>(null);
 
     const getCurrentLocation = async (): Promise<{ lat: number, lng: number } | null> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -36,124 +44,160 @@ export default function DashboardPage() {
                     },
                     (error) => {
                         console.error("Error getting location: ", error);
-                        reject(null);
+                        resolve(null);
                     }
                 );
             } else {
                 console.error("Geolocation not supported");
-                reject(null);
+                resolve(null);
             }
         });
     };
 
+    const loadData = async (filter: FilterInterface) => {
+        const allowedRole = user ? (user.role === "retailer" ? "wholesaler" : "retailer") : "retailer";
 
-    const loadData = async (filter:FilterInterface) => {
+        // Fetch sellers based on role
+        const rawSellers = (allowedRole === "retailer") ? await getAllRetailers() : await getAllWholesalers();
 
-        const allowedRole = user?user.role==="retailer"?"wholesaler":"retailer":"retailer";
-        const sellerData = await ((allowedRole==="retailer")?getAllRetailers():getAllWholesalers()); // Sellers table already filtered by role
-        console.log(allowedRole, sellerData);
+        // Cast to our local interface to ensure TS knows the structure
+        const sellerData = rawSellers as Seller[];
 
+        // Filter sellers list to only show the relevant role
+        setRetailers(
+            sellerData.filter(s => s.user_role === allowedRole)
+        );
 
-        if(!filter.sellerIds || filter.sellerIds.length==0) {
-            filter.sellerIds = sellerData.map(i=>i.id);
-            console.log(filter.sellerIds);
+        if (!filter.sellerIds || filter.sellerIds.length === 0) {
+            filter.sellerIds = sellerData.map(i => i.seller_id);
         }
 
         const listings = await getFilteredListings(filter);
-        const productData = groupListingsByProduct(listings!);
-        // Determine which sellers to show listings from
-                    
 
-        // Filter listing table
+        if (!listings) {
+            setLoading(false);
+            setLoadingProducts(false);
+            return;
+        }
+
+        const productData = groupListingsByProduct(listings);
         const cleaned = productData;
 
-        // Compute price bounds
+        // Compute price bounds safely
         const allPrices = cleaned.flatMap(p => p.listings.map(l => l.price));
-        const minP = Math.min(...allPrices);
-        const maxP = Math.max(...allPrices);
+
+        if (allPrices.length > 0) {
+            const minP = Math.min(...allPrices);
+            const maxP = Math.max(...allPrices);
+
+            // Only update bounds if they are the default value
+            if (priceBounds.max === 5000 && priceBounds.min === 0) {
+                setPriceBounds({ min: minP, max: maxP });
+                setMinPrice(minP);
+                setMaxPrice(maxP);
+            }
+        }
 
         setProducts(cleaned);
         setFiltered(cleaned);
-        if(minPrice==maxPrice) {
-            setPriceBounds({ min: minP, max: maxP });
-            setMinPrice(minP);
-            setMaxPrice(maxP);
-        }
-
-        // Only retailers if customer
-        setRetailers(
-            sellerData.filter(s => s.role === allowedRole)
-        );
 
         setLoading(false);
         setLoadingProducts(false);
     };
-    const loadWithLoc = async (filter: FilterInterface) => {
-        // Wait for coordinates before passing to loadData
-        if(coord) {
-            filter.distFrom = coord;
-        } else {
-            const newCoord = await getCurrentLocation();
-            if (newCoord) {
-                filter.distFrom = newCoord;
-                setCoord(newCoord);
-            } else if (user && user.location) {
-                filter.distFrom = { lat: user.location.latitude, lng: user.location.longitude };
-                setCoord({ lat: user.location.latitude, lng: user.location.longitude })
-            }
+
+    const loadMarketplace = async (initialLoad: boolean = false) => {
+        setLoadingProducts(true);
+
+        let currentCoord = null;
+
+        // 1. Try to get real-time geolocation
+        const newCoord = await getCurrentLocation();
+        if (newCoord) {
+            currentCoord = newCoord;
+            setCoord(newCoord);
+        } else if (user && user.location) {
+            // 2. Fallback to user's saved location
+            currentCoord = { lat: user.location.latitude, lng: user.location.longitude };
+            setCoord(currentCoord);
         }
 
-        await loadData(filter);  // Proceed with loading data after getting coordinates
+        // 3. Prepare the base filter
+        let baseFilter: FilterInterface = {};
+
+        // Apply coordinates if found (needed for proximity filtering in RPC)
+        if (currentCoord) {
+            baseFilter.distFrom = currentCoord;
+        }
+
+        // Apply filters based on current state (only set price on initial load to avoid resetting user's selection)
+        if (!initialLoad) {
+            baseFilter.minPrice = minPrice;
+            baseFilter.maxPrice = maxPrice;
+            baseFilter.sellerIds = (selectedRetailers.length > 0) ? selectedRetailers : undefined;
+            if (searchTerm !== "") baseFilter.searchTerm = searchTerm;
+            if (maxDistance) baseFilter.maxDist = Number(maxDistance);
+        }
+
+
+        // Load all data with the best filter available (even if no location is present)
+        await loadData(baseFilter);
     };
 
+
     useEffect(() => {
-        if(!userLoading) {
-            setLoading(true);
-            setLoadingProducts(true);
-            
-            loadWithLoc({});
+        if (!userLoading) {
+            // Initial load of the marketplace using the robust function
+            loadMarketplace(true);
         }
     }, [user, userLoading]);
 
     // --- LIVE SEARCH EFFECT ---
     useEffect(() => {
-        applyFilters();
+        const delayDebounceFn = setTimeout(() => {
+            if (!loading) applyFilters(false);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
     const toggleRetailer = (id: string) => {
-        const retailerIds = retailers.map(i=>i.id);
-        if(retailerIds.includes(id)) {
-            const toggle = (prev: string[]) => {
-                return prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
-            };
-            setSelectedRetailers(toggle(selectedRetailers));
-        }
+        setSelectedRetailers(prev =>
+            prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+        );
     };
 
     //─ APPLY FILTERS ─────────────────────────────────────────────
-    const applyFilters = () => {
-        const minP = Number(minPrice);
-        const maxP = Number(maxPrice);
-        const distanceLimit = maxDistance ? Number(maxDistance) : null;
-        
+    const applyFilters = (reset: boolean = false) => {
+        const minP = reset ? priceBounds.min : Number(minPrice);
+        const maxP = reset ? priceBounds.max : Number(maxPrice);
+        const distanceLimit = maxDistance ? Number(maxDistance) : undefined;
+        const sellerIds = reset ? retailers.map(i => i.seller_id) : (selectedRetailers.length > 0) ? selectedRetailers : retailers.map(i => i.seller_id);
+
         setLoadingProducts(true);
-        let filter:FilterInterface = {
-            minPrice:minP,
-            maxPrice:maxP,
-            sellerIds:(selectedRetailers.length>0)?selectedRetailers:retailers.map(i=>i.id)
+
+        let filter: FilterInterface = {
+            minPrice: minP,
+            maxPrice: maxP,
+            sellerIds: sellerIds
         };
-        if(searchTerm!=="") {
+
+        if (searchTerm !== "") {
             filter.searchTerm = searchTerm;
         }
-        if(distanceLimit) {
+        if (distanceLimit) {
             filter.maxDist = distanceLimit;
         }
-        loadWithLoc(filter);
+
+        // Use existing coord, or null if none is set
+        if (coord) {
+            filter.distFrom = coord;
+        }
+
+        loadData(filter);
     };
 
     // --- CLEAR FILTERS FUNCTION ---
     const clearAllFilters = () => {
-        // 1. Reset all filter states
         setSearchTerm("");
         setMinPrice(priceBounds.min);
         setMaxPrice(priceBounds.max);
@@ -161,16 +205,20 @@ export default function DashboardPage() {
         setMaxDistance("");
         setSortType("");
 
-        // 2. IMPORTANT: Immediately reset the list to show all products
-        setFiltered(products);
+        // Reset with default filter values
+        applyFilters(true);
     };
 
-    if (loading) return <div className="p-10 text-center text-xl">Loading...</div>;
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-rose-50 text-rose-400 font-medium animate-pulse">
+            Loading marketplace...
+        </div>
+    );
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-rose-50 flex flex-col md:flex-row">
 
-            {/* ───────────────── LEFT SIDEBAR (Filters Only) ───────────────── */}
+            {/* ───────────────── LEFT SIDEBAR ───────────────── */}
             <aside className="w-full md:w-72 bg-white border-r border-rose-100 p-6 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar z-40">
 
                 <div className="flex items-center justify-between mb-8">
@@ -178,7 +226,6 @@ export default function DashboardPage() {
                         <Filter className="text-rose-500" size={20} />
                         <h2 className="text-xl font-extrabold text-slate-900">Filters</h2>
                     </div>
-                    {/* Mini Clear Button in Sidebar */}
                     <button
                         onClick={clearAllFilters}
                         className="text-xs font-bold text-rose-500 hover:text-rose-700"
@@ -210,20 +257,20 @@ export default function DashboardPage() {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Sellers</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                         {retailers.map(r => (
-                            <label key={r.id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
+                            <label key={r.seller_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
                                         className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-rose-500 checked:bg-rose-500 transition-all"
-                                        checked={selectedRetailers.includes(r.id)}
-                                        onChange={() => toggleRetailer(r.id)}
+                                        checked={selectedRetailers.includes(r.seller_id)}
+                                        onChange={() => toggleRetailer(r.seller_id)}
                                     />
                                     <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} strokeWidth={4} />
                                 </div>
                                 <span className="text-sm font-medium text-slate-600 group-hover:text-rose-600 transition-colors">{r.name}</span>
                             </label>
                         ))}
-                        {retailers.length === 0 && <p className="text-sm text-slate-400 italic">No retailers found.</p>}
+                        {retailers.length === 0 && <p className="text-sm text-slate-400 italic">No sellers found.</p>}
                     </div>
                 </div>
 
@@ -257,7 +304,7 @@ export default function DashboardPage() {
 
                 <button
                     className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-rose-500 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all duration-300"
-                    onClick={applyFilters}
+                    onClick={() => applyFilters(false)}
                 >
                     Apply Filters
                 </button>
@@ -290,7 +337,11 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Product Grid */}
-                {filtered.length === 0 ? (
+                {loadingProducts ? (
+                    <div className="flex justify-center items-center h-64 text-rose-400 font-medium animate-pulse">
+                        Updating results...
+                    </div>
+                ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-96 text-center bg-white rounded-[2rem] border border-rose-50">
                         <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-4">
                             <Search className="text-rose-300" size={32} />
@@ -307,8 +358,8 @@ export default function DashboardPage() {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {filtered.map(product => (
-                            <div key={product.id || product.id} className="h-full">
-                                <ProductCard product={product} displayDist={coord?true:false} />
+                            <div key={product.id} className="h-full">
+                                <ProductCard product={product} />
                             </div>
                         ))}
                     </div>

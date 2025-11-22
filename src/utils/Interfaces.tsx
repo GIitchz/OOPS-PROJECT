@@ -2,19 +2,19 @@ export type UserInterface = {
     id: string,
     name: string,
     email: string,
-    location:{
+    location: {
         latitude: number,
         longitude: number
-    }|null,
-    role: 'customer'|'retailer'|'wholesaler'
+    } | null,
+    role: 'customer' | 'retailer' | 'wholesaler'
 };
 
-export type UserDataInterface = { //for raw get_user_data return
+export type UserDataInterface = {
     user_id: string,
     name: string,
-    latitude: number|null,
-    longitude: number|null,
-    role: 'customer'|'retailer'|'wholesaler'
+    latitude: number | null,
+    longitude: number | null,
+    role: 'customer' | 'retailer' | 'wholesaler'
 };
 
 export type ListingInterface = {
@@ -24,14 +24,18 @@ export type ListingInterface = {
     seller_id: string;
     seller: {
         name: string;
-        role: 'customer'|'retailer'|'wholesaler';
+        location: unknown;
+        user_role?: 'customer' | 'retailer' | 'wholesaler';
     };
     productInfo: {
         name: string;
         image_url: string | null;
         description: string | null;
-    }
+    };
+    distance_from_user?: number;
 };
+
+export type ProductListingInterface = ListingInterface;
 
 export type CartItemInterface = {
     cart_item_id: number,
@@ -40,8 +44,8 @@ export type CartItemInterface = {
 }
 
 export type OrderInterface = {
-    order_id: number,
-    ordered_at: string,
+    order_id: number;
+    ordered_at: string;
     order_items: OrderItemInterface[]
 }
 
@@ -74,56 +78,37 @@ export interface SavedAddressInterface extends AddressInterface {
 }
 
 export type OnlinePaymentInterface = {
-    payment_ref: string|null;
+    payment_ref: string | null;
     payment_mode: "offline";
 }
 
-export type UserRole = 'customer' | 'retailer' | 'wholesaler';
-
-// 1. Updated Seller Interface
-export type SellerInterface = {
-    id: string;
-    name: string;
-    role: UserRole;
-}
-
-// 2. Updated FilteredListings Interface (Flat data from RPC)
-export type FilteredListingsInterface = {
-    listing_id: string;
-    price: number;
-    stock: number;
-    seller_id: string;
-    seller_name: string;
-    seller_role: UserRole;
-    distance_km: number;
-    relevance_score: number;
+export interface FilteredListingsInterface {
     product_id: string;
     product_name: string;
-    product_description: string;
-    product_image_url: string;
+    product_description: string | null;
+    product_image_url: string | null;
     category_ids: string[];
-}
-
-// 3. Updated ProductListing Interface (Nested data after conversion)
-export type ProductListingInterface = {
+    relevance_score: number;
     listing_id: string;
     price: number;
     stock: number;
-    distance: number;
-    seller: SellerInterface;
+    distance_km: number;
+    seller_id: string;
+    seller_name: string;
+    seller_role: 'customer' | 'retailer' | 'wholesaler';
 }
 
-// 4. FilteredProduct Interface remains the same (as it groups the listings)
-export type FilteredProductInterface = {
+export interface FilteredProductInterface {
     id: string;
     name: string;
-    description: string;
-    imageURL: string;
+    description: string | null;
+    imageURL: string | null;
     categoryIDs: string[];
     relevance: number;
     minDist: number;
     minPrice: number;
-    avgPrice: number;
     maxPrice: number;
-    listings: ProductListingInterface[];
+    avgPrice: number;
+    listings: ListingInterface[];
+    lowest_price: number | null;
 }

@@ -36,7 +36,6 @@ function CartPage() {
         <div className="min-h-screen bg-rose-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto">
 
-                {/* BACK BUTTON */}
                 <button
                     onClick={() => navigate(shoppingPath)}
                     className="flex items-center gap-2 text-slate-500 hover:text-rose-600 font-bold mb-6 transition-colors group"
@@ -52,10 +51,15 @@ function CartPage() {
                         {cartItems.map(item => {
                             const listing = item.listing;
                             const product = listing.productInfo;
+
+                            // CHECK: Is this a Wholesale Item?
+                            const isWholesale = listing.seller?.user_role === 'wholesaler';
+                            const step = isWholesale ? 50 : 1;
+                            const minQty = isWholesale ? 50 : 1;
+
                             return (
                                 <li key={item.cart_item_id} className="p-6 sm:p-8 hover:bg-rose-50/30 transition-colors">
                                     <div className="flex items-center">
-                                        {/* Image */}
                                         <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-slate-200">
                                             <img
                                                 src={product.image_url || 'https://via.placeholder.com/100'}
@@ -64,7 +68,6 @@ function CartPage() {
                                             />
                                         </div>
 
-                                        {/* Details */}
                                         <div className="ml-6 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex-1">
                                                 <div className="flex justify-between">
@@ -73,18 +76,36 @@ function CartPage() {
                                                     </h3>
                                                 </div>
                                                 <p className="mt-1 text-sm text-slate-500">Sold by {listing.seller.name}</p>
+                                                {isWholesale && (
+                                                    <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-md">
+                                                        Bulk Item (Min 50)
+                                                    </span>
+                                                )}
                                                 <p className="mt-2 text-lg font-bold text-rose-600">₹{listing.price}</p>
                                             </div>
 
-                                            {/* Controls */}
                                             <div className="mt-4 sm:mt-0 sm:ml-10 flex items-center gap-6">
-                                                <div className="flex items-center border border-slate-200 rounded-xl">
+                                                <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden">
                                                     <input
                                                         type="number"
-                                                        min="1"
+                                                        min={minQty}
+                                                        step={step}
                                                         value={item.quantity}
-                                                        onChange={(e) => updateQuantity(item, parseInt(e.target.value))}
-                                                        className="w-16 p-2 text-center border-none focus:ring-0 bg-transparent font-medium text-slate-900"
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value);
+                                                            // Only update if valid number
+                                                            if (!isNaN(val)) updateQuantity(item, val);
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            // Snap to nearest 50 if wholesaler
+                                                            let val = parseInt(e.target.value);
+                                                            if (isWholesale) {
+                                                                if (val < 50) val = 50;
+                                                                else val = Math.round(val / 50) * 50;
+                                                                updateQuantity(item, val);
+                                                            }
+                                                        }}
+                                                        className="w-20 p-2 text-center border-none focus:ring-0 bg-transparent font-medium text-slate-900"
                                                     />
                                                 </div>
 

@@ -2,73 +2,71 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../utils/Database";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { ShoppingCart, Package, Store, AlertCircle, ChevronDown, ArrowLeft } from "lucide-react";
-import { FilteredProductInterface, ProductListingInterface } from "../utils/Interfaces";
-import useAuth from "../context/AuthContext";
+// Ensure these interfaces are correctly exported from your utils/Interfaces.tsx
+import { ListingInterface } from "../utils/Interfaces";
+
+// Local interface to handle the full product object with listings
+interface FullProduct {
+    id: string;
+    name: string;
+    description: string | null;
+    image_url: string | null;
+    listings: ListingInterface[];
+    lowest_price: number | null;
+}
 
 function ProductDetailPage() {
     const { user } = useAuth();
     const { productId } = useParams();
-    const [product, setProduct] = useState<FilteredProductInterface|null>(null);
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
 
-    const [coord, setCoord] = useState<{lat:number, lng:number}|null>(null);
+    const [product, setProduct] = useState<FullProduct | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedListing, setSelectedListing] = useState<ListingInterface | null>(null);
 
     const { addToCart } = useCart();
-    const [selectedListing, setSelectedListing] = useState<ProductListingInterface|null>(null);
 
-    const getCurrentLocation = async (): Promise<{ lat: number, lng: number } | null> => {
-        return new Promise((resolve, reject) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude: lat, longitude: lng } = position.coords;
-                        resolve({ lat, lng });
-                    },
-                    (error) => {
-                        console.error("Error getting location: ", error);
-                        reject(null);
-                    }
-                );
-            } else {
-                console.error("Geolocation not supported");
-                reject(null);
-            }
-        });
-    };
+    // Determine who we want to buy from
+    const targetSellerRole = user?.role === 'retailer' ? 'wholesaler' : 'retailer';
 
     useEffect(() => {
         const loadProduct = async () => {
-            let targCoord:{lat:number, lng:number}|undefined = undefined;
-            if(coord) {
-                targCoord = coord;
-            } else {
-                const newCoord = await getCurrentLocation();
-                if (newCoord) {
-                    targCoord = newCoord;
-                    setCoord(newCoord);
-                } else if (user && user.location) {
-                    targCoord = { lat: user.location.latitude, lng: user.location.longitude };
-                    setCoord({ lat: user.location.latitude, lng: user.location.longitude })
-                }
-            }
-            const data = await getProductById(productId!, targCoord);
-            setProduct(data);
+            if (!productId) return;
 
-            if (data?.listings?.length! > 0) {
-                // Sort by price (cheapest first)
-                const sorted = [...data!.listings].sort((a, b) => a.price - b.price);
-                setSelectedListing(sorted[0]);
+            // Cast the response to our FullProduct type (or handle raw data)
+            const data: any = await getProductById(productId);
+
+            if (data) {
+                // 1. Filter listings based on our role
+                const relevantListings = (data.listings || []).filter((l: any) => {
+                    const role = l.seller?.user_role?.toLowerCase();
+                    return role === targetSellerRole;
+                });
+
+                // 2. Update data with filtered listings
+                const filteredProduct = {
+                    ...data,
+                    listings: relevantListings
+                };
+
+                setProduct(filteredProduct);
+
+                if (relevantListings.length > 0) {
+                    const sorted = [...relevantListings].sort((a: any, b: any) => a.price - b.price);
+                    const bestOption = sorted.find((l: any) => l.stock > 0) || sorted[0];
+                    setSelectedListing(bestOption);
+                }
             }
             setLoading(false);
         };
         loadProduct();
-    }, [productId]);
+    }, [productId, user]);
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-rose-50 text-rose-500 font-bold animate-pulse">
-            Loading details...
+            Loading fresh details...
         </div>
     );
 
@@ -78,23 +76,41 @@ function ProductDetailPage() {
         </div>
     );
 
-    const isInStock = selectedListing?.stock! > 0;
+    // Check if we found any sellers matching our criteria
+    if (product.listings.length === 0) {
+        return (
+            <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-rose-50 p-8 text-center">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">No Sellers Found</h2>
+                <p className="text-slate-500 mb-6">
+                    {user?.role === 'retailer'
+                        ? "No wholesalers are currently selling this item."
+                        : "This item is not currently available in retail stores."}
+                </p>
+                <button onClick={() => navigate(-1)} className="text-rose-600 font-bold hover:underline">Go Back</button>
+            </div>
+        );
+    }
+
+    const isInStock = (selectedListing?.stock || 0) > 0;
 
     const handleSellerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const listingId = e.target.value;
-        const chosen = product.listings.find((l) => l.listing_id === listingId);
-        setSelectedListing(chosen!);
+        const chosen = product.listings.find((l) => l.product_listings_id === listingId);
+        if (chosen) setSelectedListing(chosen);
     };
 
     const handleAddToCart = () => {
-        if (selectedListing) addToCart(selectedListing.listing_id);
+        // Pass the full listing object to addToCart, not just the ID
+        if (selectedListing) addToCart(selectedListing);
     };
+
+    const availableListings = product.listings.filter(l => l.stock > 0);
+    const dropdownOptions = availableListings.length > 0 ? availableListings : product.listings;
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-rose-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
 
-                {/* BACK BUTTON */}
                 <button
                     onClick={() => navigate(-1)}
                     className="flex items-center gap-2 text-slate-500 hover:text-rose-600 font-bold mb-6 transition-colors group"
@@ -111,7 +127,7 @@ function ProductDetailPage() {
                         {/* Left Column: Image */}
                         <div className="relative h-96 lg:h-full min-h-[400px] bg-rose-50/50 p-8 flex items-center justify-center">
                             <img
-                                src={product.imageURL || 'https://via.placeholder.com/500'}
+                                src={product.image_url || 'https://via.placeholder.com/500'}
                                 alt={product.name}
                                 className="max-h-full w-auto object-contain mix-blend-multiply drop-shadow-xl hover:scale-105 transition-transform duration-500"
                             />
@@ -127,7 +143,6 @@ function ProductDetailPage() {
                                     {product.description || "Fresh, locally sourced, and ready for delivery directly to your doorstep."}
                                 </p>
 
-                                {/* Stock Status Badge */}
                                 <div className="flex items-center gap-2 mb-8">
                                     {isInStock ? (
                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-bold">
@@ -145,21 +160,20 @@ function ProductDetailPage() {
                                     )}
                                 </div>
 
-                                {/* Seller Selection */}
                                 <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
                                     <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
                                         <Store size={18} className="text-rose-500" />
-                                        Select a Seller
+                                        Select a {targetSellerRole === 'wholesaler' ? 'Wholesaler' : 'Seller'}
                                     </label>
                                     <div className="relative">
                                         <select
                                             className="appearance-none block w-full pl-4 pr-12 py-4 text-base font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer shadow-sm hover:border-rose-300"
-                                            value={selectedListing?.listing_id || ""}
+                                            value={selectedListing?.product_listings_id || ""}
                                             onChange={handleSellerChange}
                                         >
-                                            {product.listings.map((l) => (
-                                                <option key={l.listing_id} value={l.listing_id}>
-                                                    {l.seller?.name ?? "Unknown Seller"} — ₹{l.price} {l.stock < 5 ? `(Only ${l.stock} left!)`:''}{l.distance?`— ${l.distance.toFixed(2)} km`:''}
+                                            {dropdownOptions.map((l) => (
+                                                <option key={l.product_listings_id} value={l.product_listings_id}>
+                                                    {l.seller?.name ?? "Unknown Seller"} — ₹{l.price}
                                                 </option>
                                             ))}
                                         </select>
@@ -170,7 +184,6 @@ function ProductDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Action Area */}
                             <div className="border-t border-slate-100 pt-8 mt-4">
                                 <div className="flex items-end justify-between mb-6">
                                     <div>

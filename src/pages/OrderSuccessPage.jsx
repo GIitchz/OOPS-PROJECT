@@ -1,10 +1,19 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext"; // Import useAuth
 
 function OrderSuccessPage() {
     const location = useLocation();
+    const { user } = useAuth(); // Get the user to check their role
     const orderId = location.state?.orderId || null;
+
+    // Dynamic Redirect Logic
+    // If Retailer -> Go to Wholesale Market
+    // If Customer -> Go to Main Dashboard
+    const continuePath = user?.role === 'retailer'
+        ? '/admin/retailer/wholesale'
+        : '/dashboard';
 
     return (
         <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-rose-50 p-4">
@@ -30,7 +39,7 @@ function OrderSuccessPage() {
                 )}
 
                 <Link
-                    to="/dashboard"
+                    to={continuePath}
                     className="inline-flex items-center justify-center w-full px-8 py-4 border border-transparent text-lg font-bold rounded-2xl text-white bg-rose-500 hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 hover:-translate-y-1"
                 >
                     Continue Shopping <ArrowRight className="ml-2" size={20} />

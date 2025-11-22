@@ -1,9 +1,127 @@
-import React from 'react';
-import { DollarSign, ShoppingBag, Users, AlertTriangle, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { DollarSign, ShoppingBag, Users, AlertTriangle, TrendingUp, Package, Truck, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getSellerOrders, updateOrderItemStatus } from '../utils/OrderDB';
+import { getRetailerListings } from '../utils/InventoryDB';
+import { useNavigate } from 'react-router-dom';
 
 function RetailerDashboard() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+
+    const [stats, setStats] = useState({
+        sales: 0,
+        pending: 0,
+        lowStock: 0,
+        customers: 0
+    });
+
+    const [recentOrders, setRecentOrders] = useState([]);
+    const [alerts, setAlerts] = useState([]);
+
+    const fetchData = async () => {
+        if (!user) return;
+
+        const [ordersData, inventoryData] = await Promise.all([
+            getSellerOrders(user.id),
+            getRetailerListings(user.id)
+        ]);
+
+        // 1. Get "Start of Today" correctly
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0); // Set to 12:00:00 AM today
+
+        let todaySales = 0;
+        let pendingCount = 0;
+        const recentBuyers = new Set();
+
+        ordersData.forEach(item => {
+            // Safety check: Ensure order details exist
+            if (!item.order?.ordered_at) return;
+
+            const orderDate = new Date(item.order.ordered_at);
+
+            // CALCULATION 1: Today's Sales
+            // We count it if it was ORDERED today (standard practice), and not cancelled.
+            if (item.order_status !== 'cancelled') {
+                if (orderDate >= startOfDay) {
+                    const itemTotal = Number(item.price) * Number(item.quantity);
+                    todaySales += itemTotal;
+                }
+
+                // Track unique buyers
+                if (item.order.buyer?.name) {
+                    recentBuyers.add(item.order.buyer.name);
+                }
+            }
+
+            // CALCULATION 2: Pending Orders count
+            if (item.order_status === 'pending' || item.order_status === 'delivering') {
+                pendingCount++;
+            }
+        });
+
+        // 3. Inventory Metrics
+        let lowStockCount = 0;
+        const newAlerts = [];
+
+        inventoryData.forEach(item => {
+            if (item.stock < 10) {
+                lowStockCount++;
+                newAlerts.push({
+                    type: 'low_stock',
+                    message: `Low Stock: "${item.product?.name}" (${item.stock} left)`,
+                    id: item.product_listings_id
+                });
+            }
+        });
+
+        if (pendingCount > 0) {
+            newAlerts.unshift({
+                type: 'pending_orders',
+                message: `You have ${pendingCount} active orders to fulfill.`,
+                id: 'pending_alert'
+            });
+        }
+
+        setStats({
+            sales: todaySales,
+            pending: pendingCount,
+            lowStock: lowStockCount,
+            customers: recentBuyers.size
+        });
+
+        // 4. Recent Orders
+        const activeRecent = ordersData
+            .filter(o => o.order_status === 'pending' || o.order_status === 'delivering')
+            .slice(0, 5);
+
+        setRecentOrders(activeRecent);
+        setAlerts(newAlerts.slice(0, 5));
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [user]);
+
+    // Quick Action: Ship Order directly from Dashboard
+    const handleQuickShip = async (itemId) => {
+        if (window.confirm("Mark this item as 'Out for Delivery'?")) {
+            await updateOrderItemStatus(itemId, 'delivering');
+            fetchData(); // Refresh data to update list
+        }
+    };
+
+    if (loading) return (
+        <div className="p-10 flex justify-center text-rose-400 font-bold animate-pulse">
+            Loading dashboard metrics...
+        </div>
+    );
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
@@ -15,85 +133,89 @@ function RetailerDashboard() {
                 </div>
             </div>
 
-            {/* Stat Cards Grid */}
+            {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    {
-                        label: 'Today\'s Sales',
-                        value: '₹12,450',
-                        icon: DollarSign,
-                        color: 'bg-green-100 text-green-600',
-                        trend: '+12% vs yesterday'
-                    },
-                    {
-                        label: 'Pending Orders',
-                        value: '8',
-                        icon: ShoppingBag,
-                        color: 'bg-rose-100 text-rose-600',
-                        trend: '3 need attention'
-                    },
-                    {
-                        label: 'Low Stock Items',
-                        value: '5',
-                        icon: AlertTriangle,
-                        color: 'bg-orange-100 text-orange-600',
-                        trend: 'Restock needed'
-                    },
-                    {
-                        label: 'New Customers',
-                        value: '14',
-                        icon: Users,
-                        color: 'bg-indigo-100 text-indigo-600',
-                        trend: 'This week'
-                    },
-                ].map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-2xl ${stat.color}`}>
-                                <stat.icon size={24} />
-                            </div>
-                            {index === 0 && <TrendingUp size={20} className="text-green-500" />}
-                        </div>
-                        <h3 className="text-3xl font-extrabold text-slate-900">{stat.value}</h3>
-                        <p className="text-slate-500 font-bold text-sm mt-1">{stat.label}</p>
-                        <p className="text-xs font-medium text-slate-400 mt-3 bg-slate-50 inline-block px-2 py-1 rounded-lg">
-                            {stat.trend}
-                        </p>
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-2xl bg-green-100 text-green-600"><DollarSign size={24} /></div>
+                        <TrendingUp size={20} className="text-green-500" />
                     </div>
-                ))}
+                    <h3 className="text-3xl font-extrabold text-slate-900">₹{stats.sales.toLocaleString('en-IN')}</h3>
+                    <p className="text-slate-500 font-bold text-sm mt-1">Today's Sales</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-2xl bg-rose-100 text-rose-600"><ShoppingBag size={24} /></div>
+                    </div>
+                    <h3 className="text-3xl font-extrabold text-slate-900">{stats.pending}</h3>
+                    <p className="text-slate-500 font-bold text-sm mt-1">Pending Orders</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-2xl bg-orange-100 text-orange-600"><AlertTriangle size={24} /></div>
+                    </div>
+                    <h3 className="text-3xl font-extrabold text-slate-900">{stats.lowStock}</h3>
+                    <p className="text-slate-500 font-bold text-sm mt-1">Low Stock Items</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-2xl bg-indigo-100 text-indigo-600"><Users size={24} /></div>
+                    </div>
+                    <h3 className="text-3xl font-extrabold text-slate-900">{stats.customers}</h3>
+                    <p className="text-slate-500 font-bold text-sm mt-1">Recent Customers</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Recent Orders Panel */}
+
+                {/* IMPROVED LIVE ORDERS PANEL */}
                 <div className="bg-white rounded-[2rem] shadow-sm border border-rose-100 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-slate-900">Live Orders</h2>
-                        <button className="text-sm font-bold text-rose-600 hover:text-rose-700">View All</button>
+                        <button onClick={() => navigate('/admin/retailer/orders')} className="text-sm font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1">
+                            View All <ArrowRight size={16} />
+                        </button>
                     </div>
-                    <div className="space-y-6">
-                        {[
-                            { id: '#2045', name: 'Rohan Gupta', items: '2 items', status: 'Packing', time: '5 mins ago' },
-                            { id: '#2044', name: 'Sarah Khan', items: '5 items', status: 'Ready', time: '20 mins ago' },
-                            { id: '#2043', name: 'Amit Patel', items: '1 item', status: 'Delivered', time: '1 hour ago' },
-                        ].map((order, i) => (
-                            <div key={i} className="flex items-center justify-between pb-4 border-b border-slate-50 last:border-0 last:pb-0">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-xs">
-                                        {order.id}
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-800">{order.name}</p>
-                                        <p className="text-xs text-slate-400">{order.items} • {order.time}</p>
-                                    </div>
-                                </div>
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full ${order.status === 'Packing' ? 'bg-blue-100 text-blue-700' :
-                                        order.status === 'Ready' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-green-100 text-green-700'
-                                    }`}>
-                                    {order.status}
-                                </span>
+
+                    <div className="space-y-4">
+                        {recentOrders.length === 0 ? (
+                            <div className="text-center py-8 text-slate-400">
+                                <p className="italic">All caught up! No active orders.</p>
                             </div>
-                        ))}
+                        ) : (
+                            recentOrders.map((order) => (
+                                <div key={order.order_item_id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-rose-200 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700 text-xs">
+                                            #{order.order_item_id}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-800">{order.name}</p>
+                                            <p className="text-xs text-slate-500 font-medium">
+                                                {order.quantity}x • {order.order?.buyer?.name || 'Unknown'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Action Button */}
+                                    {order.order_status === 'pending' ? (
+                                        <button
+                                            onClick={() => handleQuickShip(order.order_item_id)}
+                                            className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-rose-600 transition-colors flex items-center gap-2"
+                                        >
+                                            <Truck size={14} /> Ship
+                                        </button>
+                                    ) : (
+                                        <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-lg">
+                                            Delivering
+                                        </span>
+                                    )}
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -101,20 +223,28 @@ function RetailerDashboard() {
                 <div className="bg-rose-50 rounded-[2rem] border border-rose-100 p-8">
                     <h2 className="text-xl font-bold text-rose-900 mb-6">Alerts & Notifications</h2>
                     <div className="space-y-4">
-                        <div className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-start">
-                            <AlertTriangle className="text-orange-500 shrink-0" size={20} />
-                            <div>
-                                <p className="text-sm font-bold text-slate-800">Low Stock Warning</p>
-                                <p className="text-xs text-slate-500 mt-1">"Organic Honey 500g" is down to 2 units. Consider restocking from Wholesaler.</p>
+                        {alerts.length === 0 ? (
+                            <div className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">
+                                <div className="bg-green-100 p-2 rounded-full text-green-600"><Package size={18} /></div>
+                                <p className="text-sm font-bold text-slate-600">All clear! Inventory and orders look good.</p>
                             </div>
-                        </div>
-                        <div className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-start">
-                            <ShoppingBag className="text-indigo-500 shrink-0" size={20} />
-                            <div>
-                                <p className="text-sm font-bold text-slate-800">New Wholesale Item</p>
-                                <p className="text-xs text-slate-500 mt-1">Fresh Strawberry Crates are now available at the Wholesale Market.</p>
-                            </div>
-                        </div>
+                        ) : (
+                            alerts.map((alert) => (
+                                <div key={alert.id} className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-start">
+                                    {alert.type === 'low_stock' ? (
+                                        <div className="bg-orange-100 p-2 rounded-full text-orange-600"><AlertTriangle size={18} /></div>
+                                    ) : (
+                                        <div className="bg-indigo-100 p-2 rounded-full text-indigo-600"><ShoppingBag size={18} /></div>
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800">
+                                            {alert.type === 'low_stock' ? 'Low Stock Warning' : 'New Activity'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1 font-medium">{alert.message}</p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

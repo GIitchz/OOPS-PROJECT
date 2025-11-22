@@ -1,3 +1,5 @@
+// pages/ProfileOrders.tsx
+
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext"
 import { OrderInterface } from "../utils/Interfaces";
@@ -6,19 +8,23 @@ import { Package, Clock, CheckCircle, XCircle, Truck, ArrowLeft } from "lucide-r
 import { useNavigate } from "react-router-dom";
 
 export const ProfileOrdersPage = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Destructure authLoading
   const navigate = useNavigate();
   const [orders, setOrders] = useState<OrderInterface[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    if (user) {
+    // FIXED: Wait until authentication is done AND user is present before fetching
+    if (!authLoading && user) {
+      setLoading(true);
       getOrders(user)
         .then(items => { setOrders(items); setLoading(false); })
         .catch(() => { setLoading(false); });
+    } else if (!authLoading && !user) {
+      // Stop loading if authentication is done but no user is found
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]); // Dependency array now includes authLoading
 
   const getStatusBadge = (status: string) => {
     switch (status) {

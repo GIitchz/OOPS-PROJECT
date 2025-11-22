@@ -2,10 +2,11 @@ import { User } from "@supabase/supabase-js";
 import Supabase from "./Database";
 import { CartItemInterface, ListingInterface, UserInterface } from "./Interfaces";
 
-export async function upsertCart(userId:string, listingId:string) {
+export async function upsertCart(user: UserInterface, listing: ListingInterface) {
     const { data, error } = await Supabase.rpc("upsert_cart_item", {
-        p_user_id: userId,
-        p_product_listing_id: listingId
+        // FIXED: Access properties from the passed objects
+        p_user_id: user.id,
+        p_product_listing_id: listing.product_listings_id
     });
 
     return { data, error };
@@ -13,8 +14,7 @@ export async function upsertCart(userId:string, listingId:string) {
 
 // ---------------------------
 // 3) Get all items in cart (for CartPage)
-// ---------------------------
-export const getCartItems = async (userId:string) => {
+export async function getCartItems(user: UserInterface) {
     const { data, error } = await Supabase
         .from("cart_items1")
         .select(`
@@ -27,7 +27,8 @@ export const getCartItems = async (userId:string) => {
                 seller_id,
                 seller:seller_id (
                     name,
-                    role:user_role
+                    location,
+                    user_role 
                 ),
                 productInfo:product_id (
                     name,
@@ -36,7 +37,8 @@ export const getCartItems = async (userId:string) => {
                 )
             )
         `)
-        .eq("user_id", userId);
+        .eq("user_id", user.id)
+        .order('cart_item_id', { ascending: true });
 
     if (error) {
         console.error("Error fetching cart items:", error);
@@ -49,7 +51,7 @@ export const getCartItems = async (userId:string) => {
 /* ---------------------------------------------------
    Delete cart item
 ----------------------------------------------------*/
-export async function removeCartItem(item:CartItemInterface) {
+export async function removeCartItem(item: CartItemInterface) {
     const { error } = await Supabase
         .from("cart_items1")
         .delete()
@@ -65,7 +67,7 @@ export async function removeCartItem(item:CartItemInterface) {
 /* ---------------------------------------------------
    5. Update quantity
 ----------------------------------------------------*/
-export async function updateCartQuantity(item:CartItemInterface, newQty:number) {
+export async function updateCartQuantity(item: CartItemInterface, newQty: number) {
     const { error } = await Supabase
         .from("cart_items1")
         .update({ quantity: newQty })
@@ -81,7 +83,7 @@ export async function updateCartQuantity(item:CartItemInterface, newQty:number) 
 /* ---------------------------------------------------
    6. Clear all items for a user
 ----------------------------------------------------*/
-export async function clearCart(user:UserInterface) {
+export async function clearCart(user: UserInterface) {
 
     const { error } = await Supabase
         .from("cart_items1")

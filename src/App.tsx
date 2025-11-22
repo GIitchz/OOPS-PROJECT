@@ -19,6 +19,7 @@ import RetailerDashboard from './pages/RetailerDashboard';
 import RetailerInventory from './pages/RetailerInventory';
 import RetailerOrders from './pages/RetailerOrders';
 import WholesaleMarket from './pages/WholesaleMarket';
+import RetailerHistory from './pages/RetailerHistory';
 
 import WholesalerDashboard from './pages/WholesalerDashboard';
 import WholesalerOrders from './pages/WholesalerOrders';
@@ -61,6 +62,7 @@ function App() {
               <Route path="inventory" element={<RetailerInventory />} />
               <Route path="orders" element={<RetailerOrders />} />
               <Route path="wholesale" element={<WholesaleMarket />} />
+              <Route path="history" element={<RetailerHistory />} />
               {/*<Route path="wholesale/item/:wholesaleItemId" element={<RetailerProductDetailPage />} /> */}
             </Route>
 

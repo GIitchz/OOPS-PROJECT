@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getUserDetails } from "../utils/Database";
 import {
     getCartItems,
     updateCartQuantity,
@@ -11,30 +10,33 @@ import Supabase from "../utils/Database";
 import { ListingInterface, CartItemInterface, UserInterface } from "../utils/Interfaces";
 import { useAuth } from "./AuthContext";
 
-interface CartContextInterface{
+// FIXED: Updated interface to match the implementation
+interface CartContextInterface {
     cartItems: CartItemInterface[];
     totalPrice: number;
-    addToCart: (listingId: string) => Promise<void>;
+    addToCart: (listing: ListingInterface) => Promise<void>; // Changed from string to ListingInterface
     removeFromCart: (item: CartItemInterface) => Promise<void>;
     updateQuantity: (item: CartItemInterface, newQty: number) => Promise<void>;
     clearCart: () => Promise<void>;
     refreshCart: (user: UserInterface) => Promise<void>;
 }
+
+// FIXED: Updated default context value to match interface
 const CartContext = createContext<CartContextInterface>({
     cartItems: [],
     totalPrice: 0,
-    addToCart: async (listing)=>{},
-    removeFromCart: async (item)=>{},
-    updateQuantity: async (item)=>{},
-    clearCart: async ()=>{},
-    refreshCart: async (user)=>{}
+    addToCart: async (listing) => { },
+    removeFromCart: async (item) => { },
+    updateQuantity: async (item) => { },
+    clearCart: async () => { },
+    refreshCart: async (user) => { }
 });
 
 export function useCart() {
     return useContext(CartContext);
 }
 
-export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const [cartItems, setCartItems] = useState<CartItemInterface[]>([]);
     const [totalPrice, setTotalPrice] = useState(0);
@@ -44,9 +46,10 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
     // -------------------------------------------------
     useEffect(() => {
         const loadCart = async () => {
-            if(!user) return;
+            if (!user) return;
 
-            const items = await getCartItems(user.id);
+            // FIXED: Passed 'user' instead of 'user.id' to match CartDB
+            const items = await getCartItems(user);
             setCartItems(items);
         };
 
@@ -66,37 +69,61 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
     }, [cartItems]);
 
     // -------------------------------------------------
-    // Add item to cart
+    // Add item to cart (With Wholesale Logic)
     // -------------------------------------------------
-    const addToCart = async (listingId: string) => {
-    if (!user) {
-        alert("Please sign in to add to cart.");
-        return;
-    }
+    const addToCart = async (listing: ListingInterface) => {
+        if (!user) {
+            alert("Please sign in to add to cart.");
+            return;
+        }
 
-    const {data:addedItem, error} = await upsertCart(user.id, listingId);
-    if (!addedItem) {
-        console.error("failed to add item to cart", error);
-        return;
-    }
+        if (!listing?.product_listings_id) {
+            console.error("addToCart called without a valid listing:", listing);
+            return;
+        }
 
-    // Reload cart
-    const items = await getCartItems(user.id);
-    setCartItems(items);
-};
+        // 1. Add the item to DB
+        const { data: addedItems, error } = await upsertCart(user, listing);
+
+        if (!addedItems || error) {
+            console.error("failed to add item to cart", error);
+            return;
+        }
+
+        // 2. WHOLESALE CHECK: Enforce Minimum Quantity of 50
+        if (listing.seller?.user_role === 'wholesaler') {
+            const newItem = addedItems[0];
+
+            if (newItem && newItem.quantity < 50) {
+                // Construct a temporary object sufficient for the update function
+                const itemToUpdate = {
+                    ...newItem,
+                    listing: listing
+                } as CartItemInterface;
+
+                await updateCartQuantity(itemToUpdate, 50);
+            }
+        }
+
+        // 3. Reload cart to update UI
+        const items = await getCartItems(user);
+        setCartItems(items);
+    };
 
 
     // -------------------------------------------------
     // Remove an item
     // -------------------------------------------------
     const removeFromCart = async (item: CartItemInterface) => {
+        if (!user) return;
+
         const { error } = await Supabase.from("cart_items1")
             .delete()
             .eq("cart_item_id", item.cart_item_id);
 
-        if(error) console.error(error);
+        if (error) console.error(error);
 
-        const items = await getCartItems(user!.id);
+        const items = await getCartItems(user);
         setCartItems(items);
     };
 
@@ -105,6 +132,8 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
     // Update quantity
     // -------------------------------------------------
     const updateQuantity = async (item: CartItemInterface, newQty: number) => {
+        if (!user) return;
+
         if (newQty < 1) {
             await removeFromCart(item);
             return;
@@ -112,7 +141,7 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
 
         await updateCartQuantity(item, newQty);
 
-        const items = await getCartItems(user!.id);
+        const items = await getCartItems(user);
         setCartItems(items);
     };
 
@@ -123,7 +152,6 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user) return;
 
         await clearCartDB(user);
-
         setCartItems([]);
     };
 
@@ -134,8 +162,8 @@ export const CartProvider:  React.FC<{ children: ReactNode }> = ({ children }) =
         removeFromCart,
         updateQuantity,
         clearCart,
-        refreshCart: async () => {
-            const items = await getCartItems(user!.id);
+        refreshCart: async (user: UserInterface) => {
+            const items = await getCartItems(user);
             setCartItems(items);
         }
     };
