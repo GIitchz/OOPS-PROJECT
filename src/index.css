@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-rose-50 text-slate-800 antialiased;
+    @apply bg-green-50 text-slate-800 antialiased;
   }
 
   h1 {

@@ -115,7 +115,7 @@ function RetailerDashboard() {
     };
 
     if (loading) return (
-        <div className="p-10 flex justify-center text-rose-400 font-bold animate-pulse">
+        <div className="p-10 flex justify-center text-green-400 font-bold animate-pulse">
             Loading dashboard metrics...
         </div>
     );
@@ -128,14 +128,14 @@ function RetailerDashboard() {
                     <h1 className="text-3xl font-extrabold text-slate-900">Store Overview</h1>
                     <p className="text-slate-500 mt-2">Hello! Here's how your shop is performing today.</p>
                 </div>
-                <div className="text-sm font-bold text-rose-500 bg-rose-50 px-4 py-2 rounded-xl border border-rose-100">
+                <div className="text-sm font-bold text-green-600 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
                     📅 {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
             </div>
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-green-100 text-green-600"><DollarSign size={24} /></div>
                         <TrendingUp size={20} className="text-green-500" />
@@ -144,15 +144,16 @@ function RetailerDashboard() {
                     <p className="text-slate-500 font-bold text-sm mt-1">Today's Sales</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 rounded-2xl bg-rose-100 text-rose-600"><ShoppingBag size={24} /></div>
+                        <div className="p-3 rounded-2xl bg-green-50 text-green-600"><ShoppingBag size={24} /></div>
                     </div>
                     <h3 className="text-3xl font-extrabold text-slate-900">{stats.pending}</h3>
                     <p className="text-slate-500 font-bold text-sm mt-1">Pending Orders</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                {/* Orange/Indigo stats kept distinct as they are alert/customer related */}
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-orange-100 text-orange-600"><AlertTriangle size={24} /></div>
                     </div>
@@ -160,7 +161,7 @@ function RetailerDashboard() {
                     <p className="text-slate-500 font-bold text-sm mt-1">Low Stock Items</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-indigo-100 text-indigo-600"><Users size={24} /></div>
                     </div>
@@ -172,10 +173,10 @@ function RetailerDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* IMPROVED LIVE ORDERS PANEL */}
-                <div className="bg-white rounded-[2rem] shadow-sm border border-rose-100 p-8">
+                <div className="bg-white rounded-[2rem] shadow-sm border border-green-100 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-slate-900">Live Orders</h2>
-                        <button onClick={() => navigate('/admin/retailer/orders')} className="text-sm font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1">
+                        <button onClick={() => navigate('/admin/retailer/orders')} className="text-sm font-bold text-green-600 hover:text-green-700 flex items-center gap-1">
                             View All <ArrowRight size={16} />
                         </button>
                     </div>
@@ -187,7 +188,7 @@ function RetailerDashboard() {
                             </div>
                         ) : (
                             recentOrders.map((order) => (
-                                <div key={order.order_item_id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-rose-200 transition-colors">
+                                <div key={order.order_item_id} className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-transparent hover:border-green-200 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700 text-xs">
                                             #{order.order_item_id}
@@ -204,7 +205,7 @@ function RetailerDashboard() {
                                     {order.order_status === 'pending' ? (
                                         <button
                                             onClick={() => handleQuickShip(order.order_item_id)}
-                                            className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-rose-600 transition-colors flex items-center gap-2"
+                                            className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
                                         >
                                             <Truck size={14} /> Ship
                                         </button>
@@ -220,8 +221,8 @@ function RetailerDashboard() {
                 </div>
 
                 {/* Alerts Panel */}
-                <div className="bg-rose-50 rounded-[2rem] border border-rose-100 p-8">
-                    <h2 className="text-xl font-bold text-rose-900 mb-6">Alerts & Notifications</h2>
+                <div className="bg-green-50 rounded-[2rem] border border-green-100 p-8">
+                    <h2 className="text-xl font-bold text-green-900 mb-6">Alerts & Notifications</h2>
                     <div className="space-y-4">
                         {alerts.length === 0 ? (
                             <div className="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">

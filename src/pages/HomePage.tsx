@@ -10,26 +10,26 @@ function HomePage() {
     const { user } = useAuth();
 
     return (
-        <div className="min-h-[calc(100vh-80px)] flex flex-col bg-rose-50/50">
+        <div className="min-h-[calc(100vh-80px)] flex flex-col bg-green-50/50">
 
             {/* Hero Section */}
             <div className="relative overflow-hidden">
                 {/* Funky Background Blob */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-full bg-white rounded-b-[50%] shadow-xl shadow-rose-100/50 z-0"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-full bg-white rounded-b-[50%] shadow-xl shadow-green-100/50 z-0"></div>
 
                 <div className="relative z-10 max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8 text-center">
 
                     {/* Logo/Title Section */}
                     <div className="flex items-center justify-center mb-6">
-                        {/* Updated Text: The Grove */}
+                        {/* Updated Text: The Grove with GREEN Gradient */}
                         <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
-                            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Grove</span>
+                            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Grove</span>
                         </h1>
                         {/* Using your PawPrints image */}
                         <img
                             src={PawPrintsImage}
                             alt="Panda Paw Prints"
-                            className="h-12 w-12 ml-2 mt-5 transform rotate-12"
+                            className="h-12 w-12 ml-3 mt-5 transform rotate-12"
                         />
                     </div>
 
@@ -41,7 +41,7 @@ function HomePage() {
                         {user ? (
                             <Link
                                 to={user.role === 'customer' ? "/dashboard" : `/admin/${user.role}`}
-                                className="px-8 py-4 border border-transparent text-lg font-bold rounded-full shadow-lg text-white bg-rose-500 hover:bg-rose-600 hover:scale-105 transition-all"
+                                className="px-8 py-4 border border-transparent text-lg font-bold rounded-full shadow-lg text-white bg-green-500 hover:bg-green-600 hover:scale-105 transition-all"
                             >
                                 Go to Dashboard &rarr;
                             </Link>
@@ -49,13 +49,13 @@ function HomePage() {
                             <>
                                 <Link
                                     to="/register"
-                                    className="px-8 py-3 border border-transparent text-base font-bold rounded-full shadow-lg shadow-rose-200 text-white bg-rose-500 hover:bg-rose-600 hover:-translate-y-1 transition-all"
+                                    className="px-8 py-3 border border-transparent text-base font-bold rounded-full shadow-lg shadow-green-200 text-white bg-green-500 hover:bg-green-600 hover:-translate-y-1 transition-all"
                                 >
                                     Get Started
                                 </Link>
                                 <Link
                                     to="/login"
-                                    className="px-8 py-3 border-2 border-rose-200 text-base font-bold rounded-full text-rose-600 bg-white hover:bg-rose-50 hover:border-rose-300 transition-all"
+                                    className="px-8 py-3 border-2 border-green-200 text-base font-bold rounded-full text-green-600 bg-white hover:bg-green-50 hover:border-green-300 transition-all"
                                 >
                                     Sign In
                                 </Link>
@@ -74,7 +74,7 @@ function HomePage() {
                                 title: 'For Customers',
                                 description: 'Find hidden gems in your neighborhood and get them delivered with love.',
                                 icon: ShoppingCart,
-                                color: 'bg-rose-100 text-rose-600'
+                                color: 'bg-green-100 text-green-600'
                             },
                             {
                                 title: 'For Retailers',
@@ -86,7 +86,7 @@ function HomePage() {
                                 title: 'For Wholesalers',
                                 description: 'Move bulk stock without the bulk stress. Streamlined and simple.',
                                 icon: Package,
-                                color: 'bg-purple-100 text-purple-600'
+                                color: 'bg-indigo-100 text-indigo-600'
                             }
                         ].map((item) => (
                             <div key={item.title} className="relative group bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100">

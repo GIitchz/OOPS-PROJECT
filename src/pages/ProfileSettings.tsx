@@ -29,7 +29,7 @@ export const ProfileSettingsPage = () => {
       {/* BACK BUTTON */}
       <button
         onClick={() => navigate('/profile')}
-        className="flex items-center gap-2 text-slate-500 hover:text-rose-600 font-bold transition-colors group"
+        className="flex items-center gap-2 text-slate-500 hover:text-green-600 font-bold transition-colors group"
       >
         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
         Back to Profile
@@ -41,9 +41,9 @@ export const ProfileSettingsPage = () => {
       </div>
 
       {/* --- NAME UPDATE --- */}
-      <div className="bg-white rounded-[2rem] shadow-sm border border-rose-100 p-8">
+      <div className="bg-white rounded-[2rem] shadow-sm border border-green-100 p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-rose-50 rounded-xl text-rose-500">
+          <div className="p-2 bg-green-50 rounded-xl text-green-600">
             <User size={20} />
           </div>
           <h3 className="text-lg font-bold text-slate-800">Public Profile</h3>
@@ -57,13 +57,13 @@ export const ProfileSettingsPage = () => {
               placeholder={user?.name || "Enter your name"}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-medium"
+              className="w-full p-4 bg-green-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all font-medium"
             />
           </div>
           <button
             onClick={updateName}
             disabled={!newName}
-            className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Save Name
           </button>
@@ -71,9 +71,9 @@ export const ProfileSettingsPage = () => {
       </div>
 
       {/* --- PASSWORD UPDATE --- */}
-      <div className="bg-white rounded-[2rem] shadow-sm border border-rose-100 p-8">
+      <div className="bg-white rounded-[2rem] shadow-sm border border-green-100 p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-rose-50 rounded-xl text-rose-500">
+          <div className="p-2 bg-green-50 rounded-xl text-green-600">
             <Lock size={20} />
           </div>
           <h3 className="text-lg font-bold text-slate-800">Security</h3>
@@ -87,7 +87,7 @@ export const ProfileSettingsPage = () => {
               placeholder="Enter current password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-medium"
+              className="w-full p-4 bg-green-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all font-medium"
             />
           </div>
           <div>
@@ -97,13 +97,13 @@ export const ProfileSettingsPage = () => {
               placeholder="Enter new password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-medium"
+              className="w-full p-4 bg-green-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all font-medium"
             />
           </div>
 
           <button
             onClick={updatePassword}
-            className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-rose-600 transition-all"
+            className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-green-600 transition-all"
           >
             Change Password
           </button>

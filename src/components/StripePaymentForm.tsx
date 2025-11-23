@@ -1,4 +1,3 @@
-// src/components/StripePaymentForm.tsx
 import React, { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
@@ -22,7 +21,7 @@ export const StripePaymentForm = ({ onSuccess, onError, amount }: StripePaymentF
 
         const { error, paymentIntent } = await stripe.confirmPayment({
             elements,
-            redirect: "if_required", // Prevents redirect if not needed (for simple cards)
+            redirect: "if_required",
         });
 
         if (error) {
@@ -30,7 +29,6 @@ export const StripePaymentForm = ({ onSuccess, onError, amount }: StripePaymentF
             setProcessing(false);
         } else if (paymentIntent && paymentIntent.status === "succeeded") {
             onSuccess(paymentIntent.id);
-            // Don't stop processing here, let the parent handle the redirect
         } else {
             onError("Payment status unknown. Please try again.");
             setProcessing(false);
@@ -46,7 +44,7 @@ export const StripePaymentForm = ({ onSuccess, onError, amount }: StripePaymentF
             <button
                 type="submit"
                 disabled={!stripe || processing}
-                className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                className="w-full py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all"
             >
                 {processing ? "Processing..." : "Pay Now"}
             </button>

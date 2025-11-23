@@ -1,11 +1,10 @@
-// src/pages/CheckoutPage.tsx
 import React, { useEffect, useState, useMemo } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createOrder, completePayment } from "../utils/OrderDB";
 import { useAuth } from '../context/AuthContext';
 import { getSavedAddresses, saveAddressForUser } from "../utils/AdressDB";
-import { MapPin, CreditCard, Truck, AlertCircle, ArrowLeft, Plus, X, ExternalLink } from 'lucide-react';
+import { MapPin, CreditCard, Truck, ArrowLeft, Plus, X, ExternalLink } from 'lucide-react';
 import { SavedAddressInterface } from '../utils/Interfaces';
 import { GeoPickerMap, LocationInterface, StaticLocationMap } from '../components/GeoPickerMap';
 
@@ -75,13 +74,6 @@ function CheckoutPage() {
         f();
     };
 
-    // --- MAIN ORDER HANDLER ---
-    // ... inside CheckoutPage component ...
-
-    // src/pages/CheckoutPage.tsx
-
-    // ... inside the component ...
-
     const handlePlaceOrder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return alert("Please log in.");
@@ -89,15 +81,14 @@ function CheckoutPage() {
 
         setLoading(true);
 
+        const payment = await completePayment(totalPrice, user.id, paymentMethod); // Passed userId
 
-        const payment = await completePayment(totalPrice, paymentMethod, paymentMethod);
-
-        if(payment.error || (paymentMethod==='online'&&!payment.payment_ref)) {
-            alert("Payment failed");
+        if (payment.error || (paymentMethod === 'online' && !payment.payment_ref)) {
+            alert("Payment failed or was cancelled.");
             setLoading(false);
             return;
         }
-        
+
         const addressData = {
             formatted_address: selectedLocation.formatted_address,
             lat: selectedLocation.lat,
@@ -105,16 +96,11 @@ function CheckoutPage() {
             address_id: selectedLocation.address_id || null
         };
 
-        // 2. Create Order in Database
         const { data: order, error } = await createOrder(user, payment, addressData);
 
         if (error || !order) {
-            // Handle specific DB errors
-            if (error?.code === '23514') { 
+            if (error?.code === '23514') {
                 alert("⚠️ Order Failed: Out of Stock.");
-            } else if (error?.code === 'P0001') {
-                // This catches the error you are seeing
-                alert(`Database Error: ${error.message}`); 
             } else {
                 alert(`Order creation failed: ${error?.message || "Unknown error"}`);
             }
@@ -131,13 +117,13 @@ function CheckoutPage() {
     const CurrentAddressCard = useMemo(() => {
         if (!selectedLocation) return null;
         return (
-            <div className={`p-4 rounded-2xl border transition-all ${selectedLocation.address_id ? 'border-blue-300 bg-blue-50' : 'border-rose-300 bg-rose-50'}`}>
+            <div className={`p-4 rounded-2xl border transition-all ${selectedLocation.address_id ? 'border-blue-300 bg-blue-50' : 'border-green-300 bg-green-50'}`}>
                 <div className="flex items-start justify-between">
                     <div className='flex-1 pr-4'>
                         <p className="font-bold text-slate-800 mb-1">{selectedLocation.address_id ? 'Saved Address' : 'Temporary Address'}</p>
                         <p className="text-sm text-slate-600">{selectedLocation.formatted_address}</p>
                     </div>
-                    <button type="button" onClick={() => setActiveMapMode('picker')} className="text-sm text-rose-600 font-bold hover:text-rose-700 transition-colors py-1 px-3 bg-white rounded-lg border border-rose-200">Change</button>
+                    <button type="button" onClick={() => setActiveMapMode('picker')} className="text-sm text-green-600 font-bold hover:text-green-700 transition-colors py-1 px-3 bg-white rounded-lg border border-green-200">Change</button>
                 </div>
                 <div className={`${MAP_HEIGHT} mt-4 rounded-xl overflow-hidden shadow-md border border-slate-100`}>
                     <StaticLocationMap location={selectedLocation} />
@@ -147,13 +133,13 @@ function CheckoutPage() {
     }, [selectedLocation]);
 
     if (!cartItems || cartItems.length === 0) {
-        return <div className="min-h-[80vh] flex items-center justify-center bg-rose-50"><div className="text-center"><h2 className="text-2xl font-bold text-slate-800 mb-2">Your Cart is Empty</h2></div></div>;
+        return <div className="min-h-[80vh] flex items-center justify-center bg-green-50"><div className="text-center"><h2 className="text-2xl font-bold text-slate-800 mb-2">Your Cart is Empty</h2></div></div>;
     }
 
     return (
-        <div className="min-h-screen bg-rose-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-green-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                <button onClick={() => navigate('/cart')} className="flex items-center gap-2 text-slate-500 hover:text-rose-600 font-bold mb-6 transition-colors group">
+                <button onClick={() => navigate('/cart')} className="flex items-center gap-2 text-slate-500 hover:text-green-600 font-bold mb-6 transition-colors group">
                     <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Back to Cart
                 </button>
 
@@ -162,9 +148,9 @@ function CheckoutPage() {
                 <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
                     <div className="lg:col-span-7">
                         {/* Address Section */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-rose-100 p-6 sm:p-8 mb-8">
+                        <div className="bg-white rounded-3xl shadow-sm border border-green-100 p-6 sm:p-8 mb-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-rose-100 rounded-full text-rose-600"><MapPin size={24} /></div>
+                                <div className="p-2 bg-green-100 rounded-full text-green-600"><MapPin size={24} /></div>
                                 <h2 className="text-xl font-bold text-slate-800">Shipping Location</h2>
                             </div>
                             <div className="mb-6 bg-blue-50 p-4 rounded-2xl border border-blue-100">
@@ -176,7 +162,7 @@ function CheckoutPage() {
                             </div>
                             {selectedLocation && activeMapMode !== 'picker' && <div className='mb-6'>{CurrentAddressCard}</div>}
                             {!selectedLocation && activeMapMode !== 'picker' && (
-                                <button type='button' onClick={() => setActiveMapMode('picker')} className="w-full py-5 border-2 border-dashed border-rose-200 rounded-2xl text-rose-500 hover:bg-rose-50 transition-colors flex flex-col items-center justify-center gap-1">
+                                <button type='button' onClick={() => setActiveMapMode('picker')} className="w-full py-5 border-2 border-dashed border-green-200 rounded-2xl text-green-500 hover:bg-green-50 transition-colors flex flex-col items-center justify-center gap-1">
                                     <Plus size={24} /> <p className="font-bold text-sm">Select Location on Map</p>
                                 </button>
                             )}
@@ -184,7 +170,7 @@ function CheckoutPage() {
                                 <div className="border border-slate-200 rounded-2xl overflow-hidden p-4">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-md font-bold text-slate-800">Pick Location</h3>
-                                        <button type='button' onClick={() => setActiveMapMode(null)} className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-full"><X size={20} /></button>
+                                        <button type='button' onClick={() => setActiveMapMode(null)} className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-full"><X size={20} /></button>
                                     </div>
                                     <GeoPickerMap onLocationPicked={handleLocationPicked} submitText="Use This Location" successText="Location Selected" />
                                 </div>
@@ -192,16 +178,16 @@ function CheckoutPage() {
                         </div>
 
                         {/* Payment Section */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-rose-100 p-6 sm:p-8 mb-8">
+                        <div className="bg-white rounded-3xl shadow-sm border border-green-100 p-6 sm:p-8 mb-8">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-green-100 rounded-full text-green-600"><CreditCard size={24} /></div>
                                 <h2 className="text-xl font-bold text-slate-800">Payment Method</h2>
                             </div>
 
                             <div className="space-y-3">
-                                <label className={`flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-rose-500 bg-rose-50 ring-1 ring-rose-500' : 'border-slate-200 hover:border-rose-300'}`}>
+                                <label className={`flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-slate-200 hover:border-green-300'}`}>
                                     <div className="flex items-center gap-3">
-                                        <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-rose-600 focus:ring-rose-500" />
+                                        <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-green-600 focus:ring-green-500" />
                                         <div className="flex items-center gap-2">
                                             <Truck size={20} className="text-slate-500" />
                                             <span className="font-bold text-slate-700">Cash on Delivery</span>
@@ -226,23 +212,23 @@ function CheckoutPage() {
                             onClick={handlePlaceOrder}
                             disabled={loading || !selectedLocation || activeMapMode === 'picker'}
                             className={`w-full py-4 px-6 text-white font-extrabold text-lg rounded-2xl shadow-lg transition-all hover:-translate-y-1 disabled:opacity-70 disabled:cursor-wait flex items-center justify-center gap-2
-                                ${paymentMethod === 'online' 
-                                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' 
-                                    : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
+                                ${paymentMethod === 'online'
+                                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
+                                    : 'bg-green-600 hover:bg-green-700 shadow-green-200'
                                 }`}
                         >
                             {loading ? 'Processing...' : (
-                                paymentMethod === 'online' 
-                                    ? `Proceed to Pay ₹${totalPrice.toFixed(2)}` 
+                                paymentMethod === 'online'
+                                    ? `Proceed to Pay ₹${totalPrice.toFixed(2)}`
                                     : `Confirm Order for ₹${totalPrice.toFixed(2)}`
                             )}
                             {paymentMethod === 'online' && !loading && <ExternalLink size={20} />}
                         </button>
                     </div>
 
-                    {/* Order Summary (Right Column) - Unchanged */}
+                    {/* Order Summary */}
                     <div className="lg:col-span-5 mt-8 lg:mt-0">
-                        <div className="bg-white rounded-3xl shadow-xl shadow-rose-100/50 border border-rose-100 p-6 sm:p-8 sticky top-24">
+                        <div className="bg-white rounded-3xl shadow-xl shadow-green-100/50 border border-green-100 p-6 sm:p-8 sticky top-24">
                             <h2 className="text-xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100">Order Summary</h2>
                             <ul className="space-y-4 mb-6 max-h-96 overflow-auto pr-2 custom-scrollbar">
                                 {cartItems.map((item) => (

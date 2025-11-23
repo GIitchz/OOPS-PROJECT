@@ -1,5 +1,3 @@
-// pages/RetailerOrders.jsx
-
 import React, { useEffect, useState } from 'react';
 import { Package, CheckCircle, Truck, Clock, XCircle, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -75,10 +73,10 @@ function RetailerOrders() {
                 <p className="text-slate-500">Manage active orders. Shipping an item will deduct it from your inventory.</p>
             </div>
 
-            <div className="bg-white border border-rose-100 rounded-[2rem] shadow-sm overflow-hidden">
+            <div className="bg-white border border-green-100 rounded-[2rem] shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-rose-50/50 text-slate-700 font-bold uppercase tracking-wider">
+                        <thead className="bg-green-50 text-slate-700 font-bold uppercase tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">Order Item</th>
                                 <th className="px-6 py-4">Customer & Location</th>
@@ -86,20 +84,20 @@ function RetailerOrders() {
                                 <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-rose-50">
+                        <tbody className="divide-y divide-green-50">
                             {loading ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">Loading orders...</td></tr>
                             ) : orders.length === 0 ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">No pending orders found.</td></tr>
                             ) : (
                                 orders.map((item) => (
-                                    <tr key={item.order_item_id} className="hover:bg-rose-50/30 transition-colors">
+                                    <tr key={item.order_item_id} className="hover:bg-green-50/30 transition-colors">
 
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-900 text-base">{item.name}</span>
                                                 <span className="text-xs text-slate-500">Qty: {item.quantity} • Order #{item.order?.order_id ?? 'N/A'}</span>
-                                                <span className="text-rose-600 font-bold mt-1">₹{item.price * item.quantity}</span>
+                                                <span className="text-green-600 font-bold mt-1">₹{item.price * item.quantity}</span>
                                             </div>
                                         </td>
 
@@ -121,7 +119,7 @@ function RetailerOrders() {
 
                                         <td className="px-6 py-4 text-right">
                                             <select
-                                                className="bg-white border border-rose-200 text-slate-700 text-xs font-bold py-2 px-3 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer shadow-sm"
+                                                className="bg-white border border-green-200 text-slate-700 text-xs font-bold py-2 px-3 rounded-xl outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm"
                                                 value={item.order_status}
                                                 onChange={(e) => handleStatusUpdate(item, e.target.value)}
                                                 disabled={item.order_status === 'completed' || item.order_status === 'cancelled'}

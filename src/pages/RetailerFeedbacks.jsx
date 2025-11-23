@@ -1,8 +1,7 @@
-// src/pages/RetailerFeedbacks.jsx
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Star, User, Calendar } from 'lucide-react'; 
+import { MessageSquare, Star, User, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getRetailerFeedbacks } from '../utils/FeedbackDB'; // 👈 IMPORT THIS
+import { getRetailerFeedbacks } from '../utils/FeedbackDB';
 
 function RetailerFeedbacks() {
     const { user } = useAuth();
@@ -12,10 +11,10 @@ function RetailerFeedbacks() {
     useEffect(() => {
         const loadFeedbacks = async () => {
             if (!user) return;
-            
+
             // 👇 CALL THE REAL DATABASE FUNCTION
             const data = await getRetailerFeedbacks(user.id);
-            
+
             // Map the raw Supabase data to your UI structure
             const formattedData = data.map(item => ({
                 id: item.order_item_id,
@@ -49,10 +48,10 @@ function RetailerFeedbacks() {
                 <p className="text-slate-500">See what your customers are saying about your products.</p>
             </div>
 
-            <div className="bg-white border border-rose-100 rounded-[2rem] shadow-sm overflow-hidden">
+            <div className="bg-white border border-green-100 rounded-[2rem] shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-rose-50/50 text-slate-700 font-bold uppercase tracking-wider">
+                        <thead className="bg-green-50 text-slate-700 font-bold uppercase tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">Date</th>
                                 <th className="px-6 py-4">Customer</th>
@@ -60,17 +59,17 @@ function RetailerFeedbacks() {
                                 <th className="px-6 py-4">Rating & Review</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-rose-50">
+                        <tbody className="divide-y divide-green-50">
                             {loading ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">Loading feedbacks...</td></tr>
                             ) : feedbacks.length === 0 ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">No feedbacks received yet.</td></tr>
                             ) : (
                                 feedbacks.map((item) => (
-                                    <tr key={item.id} className="hover:bg-rose-50/30 transition-colors">
+                                    <tr key={item.id} className="hover:bg-green-50/30 transition-colors">
                                         <td className="px-6 py-4 text-slate-500">
                                             <div className="flex items-center gap-2">
-                                                <Calendar size={16} className="text-rose-300" />
+                                                <Calendar size={16} className="text-green-300" />
                                                 {new Date(item.date).toLocaleDateString()}
                                             </div>
                                         </td>

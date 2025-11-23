@@ -17,13 +17,13 @@ export default function PriceSlider({ min, max, value, onChange }) {
                 valueLabelDisplay="auto"
                 valueLabelFormat={(v) => `₹${v}`}
                 sx={{
-                    color: "#f43f5e",
+                    color: "#16a34a", // Green-600
                     height: 6,
                     "& .MuiSlider-thumb": {
                         height: 18,
                         width: 18,
                         backgroundColor: "#fff",
-                        border: "2px solid #f43f5e",
+                        border: "2px solid #16a34a", // Green-600
                         boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
                     },
                     "& .MuiSlider-track": {

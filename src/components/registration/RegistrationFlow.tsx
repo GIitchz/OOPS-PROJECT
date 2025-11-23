@@ -109,22 +109,22 @@ const RegistrationFlow = () => {
 
   return (
     <div>
-      {/* Progress Bar (Increased text size and bar height) */}
+      {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3 px-1">
-          <span className={`text-sm font-bold ${step >= 1 ? 'text-rose-500' : 'text-slate-300'}`}>Account</span>
-          <span className={`text-sm font-bold ${step >= 2 ? 'text-rose-500' : 'text-slate-300'}`}>Details</span>
-          <span className={`text-sm font-bold ${step >= 3 ? 'text-rose-500' : 'text-slate-300'}`}>Verify</span>
+          <span className={`text-sm font-bold ${step >= 1 ? 'text-green-600' : 'text-slate-300'}`}>Account</span>
+          <span className={`text-sm font-bold ${step >= 2 ? 'text-green-600' : 'text-slate-300'}`}>Details</span>
+          <span className={`text-sm font-bold ${step >= 3 ? 'text-green-600' : 'text-slate-300'}`}>Verify</span>
         </div>
         <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-rose-500 transition-all duration-500 ease-out"
+            className="h-full bg-green-500 transition-all duration-500 ease-out"
             style={{ width: `${(step / 3) * 100}%` }}
           ></div>
         </div>
       </div>
 
-      {/* Error Display (Increased padding, text, and icon size) */}
+      {/* Error Display */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
           <AlertTriangle className="text-red-500 shrink-0" size={24} />
@@ -132,7 +132,7 @@ const RegistrationFlow = () => {
         </div>
       )}
 
-      {/* Steps */}
+      {/* Steps (unchanged props) */}
       {step === 1 && <Step1 onNext={handleNextStep} onChange={handleFormDataChange} initialFormData={formData} />}
       {step === 2 && <Step2 onNext={handleSubmit} onPrev={handlePreviousStep} onChange={handleFormDataChange} initialFormData={formData} />}
       {step === 3 && <Step3 />}

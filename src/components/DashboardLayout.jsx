@@ -14,8 +14,8 @@ function DashboardLayout() {
             className={({ isActive }) =>
                 `flex items-center gap-3 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 group
                 ${isActive
-                    ? 'bg-rose-50 text-rose-600 shadow-sm border border-rose-100'
-                    : 'text-slate-500 hover:bg-white hover:text-rose-500 hover:shadow-sm hover:border-slate-100 border border-transparent'
+                    ? 'bg-green-50 text-green-600 shadow-sm border border-green-100'
+                    : 'text-slate-500 hover:bg-white hover:text-green-500 hover:shadow-sm hover:border-slate-100 border border-transparent'
                 }`
             }
         >
@@ -23,7 +23,7 @@ function DashboardLayout() {
                 <>
                     <Icon
                         size={20}
-                        className={isActive ? "text-rose-600" : "text-slate-400 group-hover:text-rose-500"}
+                        className={isActive ? "text-green-600" : "text-slate-400 group-hover:text-green-500"}
                     />
                     {label}
                 </>
@@ -32,14 +32,14 @@ function DashboardLayout() {
     );
 
     return (
-        <div className="min-h-screen bg-rose-50 flex flex-col md:flex-row">
+        <div className="min-h-screen bg-green-50 flex flex-col md:flex-row">
 
             {/* Sidebar */}
-            <aside className="w-full md:w-72 bg-white/50 backdrop-blur-xl border-r border-rose-100 md:h-[calc(100vh-80px)] sticky top-20 hidden md:flex flex-col justify-between px-6 pb-6 pt-0 overflow-y-auto custom-scrollbar">
+            <aside className="w-full md:w-72 bg-white/50 backdrop-blur-xl border-r border-green-100 md:h-[calc(100vh-80px)] sticky top-20 hidden md:flex flex-col justify-between px-6 pb-6 pt-0 overflow-y-auto custom-scrollbar">
 
                 {/* Top Section: Navigation */}
                 <div>
-                    <h3 className="text-xs font-extrabold text-rose-400 uppercase tracking-wider mb-4 px-2 mt-4">
+                    <h3 className="text-xs font-extrabold text-green-400 uppercase tracking-wider mb-4 px-2 mt-4">
                         {role} Menu
                     </h3>
                     <nav className="space-y-1">
@@ -67,9 +67,9 @@ function DashboardLayout() {
 
                 {/* Bottom Section: Support Card */}
                 <div className="mt-6">
-                    <div className="bg-gradient-to-br from-rose-100 to-white p-5 rounded-[2rem] border border-rose-100 shadow-sm">
+                    <div className="bg-gradient-to-br from-green-100 to-white p-5 rounded-[2rem] border border-green-100 shadow-sm">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-white rounded-full shadow-sm text-rose-500">
+                            <div className="p-2 bg-white rounded-full shadow-sm text-green-500">
                                 <HelpCircle size={18} />
                             </div>
                             <p className="text-sm font-bold text-slate-800">Need Help?</p>
@@ -77,7 +77,7 @@ function DashboardLayout() {
                         <p className="text-xs text-slate-500 leading-relaxed mb-3">
                             Contact our support team for assistance with orders or inventory.
                         </p>
-                        <button className="w-full py-2 bg-white text-rose-600 text-xs font-bold rounded-xl border border-rose-100 hover:bg-rose-50 transition-colors">
+                        <button className="w-full py-2 bg-white text-green-600 text-xs font-bold rounded-xl border border-green-100 hover:bg-green-50 transition-colors">
                             Contact Support
                         </button>
                     </div>

@@ -12,7 +12,6 @@ function ProfilePage() {
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
 
-  // Determine correct dashboard path based on role
   const dashboardPath = user?.role === 'retailer'
     ? '/admin/retailer'
     : user?.role === 'wholesaler'
@@ -20,24 +19,22 @@ function ProfilePage() {
       : '/dashboard';
 
   return (
-    <div className="min-h-screen bg-rose-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-green-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
 
-        {/* BACK TO DASHBOARD BUTTON */}
         <button
           onClick={() => navigate(dashboardPath)}
-          className="flex items-center gap-2 text-slate-500 hover:text-rose-600 font-bold mb-6 transition-colors group"
+          className="flex items-center gap-2 text-slate-500 hover:text-green-600 font-bold mb-6 transition-colors group"
         >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
           Back to Dashboard
         </button>
 
-        {/* Profile Header Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-rose-100 overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-rose-400 to-orange-400 h-32"></div>
+        <div className="bg-white rounded-3xl shadow-xl shadow-green-100 overflow-hidden mb-6">
+          <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-32"></div>
           <div className="px-8 pb-8">
             <div className="relative -mt-12 mb-4">
-              <div className="inline-flex items-center justify-center h-24 w-24 rounded-2xl bg-white shadow-sm border-4 border-white text-rose-500">
+              <div className="inline-flex items-center justify-center h-24 w-24 rounded-2xl bg-white shadow-sm border-4 border-white text-green-500">
                 <User size={48} />
               </div>
             </div>
@@ -65,29 +62,26 @@ function ProfilePage() {
 const ActionGrid = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const role = user?.role; // Get role once for cleaner conditionals
+  const role = user?.role;
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
 
-  // DYNAMIC LABEL LOGIC
   const ordersLabel = role === 'retailer' ? "Wholesale Purchases" : "My Orders";
   const ordersSubtext = role === 'retailer' ? "Track inventory you bought" : "View past orders";
 
   return (
     <>
-      {/* Actions Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        {/* Your Cart Button (Conditional for Wholesaler) */}
         {role !== 'wholesaler' && (
           <button
             onClick={() => navigate('/cart')}
-            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-green-100 hover:shadow-md hover:border-green-200 transition-all text-left group"
           >
-            <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+            <div className="p-3 bg-green-100 text-green-600 rounded-xl group-hover:bg-green-500 group-hover:text-white transition-colors">
               <ShoppingCart size={24} />
             </div>
             <div>
@@ -97,29 +91,26 @@ const ActionGrid = () => {
           </button>
         )}
 
-        {/* Profile Orders Button (Conditional for Wholesaler) */}
         {role !== 'wholesaler' && (
           <button
             onClick={() => navigate('/profile/orders')}
-            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+            className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-green-100 hover:shadow-md hover:border-green-200 transition-all text-left group"
           >
             <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
               <ClipboardList size={24} />
             </div>
             <div>
-              {/* Dynamic Labels */}
               <h3 className="font-bold text-slate-800">{ordersLabel}</h3>
               <p className="text-sm text-slate-500">{ordersSubtext}</p>
             </div>
           </button>
         )}
 
-        {/* Profile Addresses Button */}
         <button
           onClick={() => navigate('/profile/addresses')}
-          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-green-100 hover:shadow-md hover:border-green-200 transition-all text-left group"
         >
-          <div className="p-3 bg-rose-100 text-rose-600 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+          <div className="p-3 bg-green-100 text-green-600 rounded-xl group-hover:bg-green-500 group-hover:text-white transition-colors">
             <MapPin size={24} />
           </div>
           <div>
@@ -128,10 +119,9 @@ const ActionGrid = () => {
           </div>
         </button>
 
-        {/* Profile Settings Button */}
         <button
           onClick={() => navigate('/profile/settings')}
-          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-green-100 hover:shadow-md hover:border-green-200 transition-all text-left group"
         >
           <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
             <Settings size={24} />
@@ -142,10 +132,9 @@ const ActionGrid = () => {
           </div>
         </button>
 
-        {/* Sign Out Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-rose-100 hover:shadow-md hover:border-rose-200 transition-all text-left group"
+          className="flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border border-green-100 hover:shadow-md hover:border-green-200 transition-all text-left group"
         >
           <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
             <LogOut size={24} />

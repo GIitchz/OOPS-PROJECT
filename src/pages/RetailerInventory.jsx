@@ -112,7 +112,7 @@ function RetailerInventory() {
         else {
             // SCENARIO 2: CREATE NEW
             const res = await createNewProductAndListing(user.id,
-                { name: formData.name, description: formData.description, image_url: formData.image_url,categories: selectedCategories },
+                { name: formData.name, description: formData.description, image_url: formData.image_url, categories: selectedCategories },
                 formData.price,
                 formData.stock
             );
@@ -169,7 +169,7 @@ function RetailerInventory() {
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="inline-flex items-center gap-2 bg-rose-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-rose-600 shadow-lg shadow-rose-200 transition-all hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-green-700 shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5"
                 >
                     <Plus size={18} />
                     Add Item
@@ -180,7 +180,7 @@ function RetailerInventory() {
             <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-rose-50/50 text-slate-700 font-bold uppercase tracking-wider">
+                        <thead className="bg-green-50 text-slate-700 font-bold uppercase tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">Product</th>
                                 <th className="px-6 py-4">Price</th>
@@ -195,7 +195,7 @@ function RetailerInventory() {
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">No products listed yet.</td></tr>
                             ) : (
                                 listings.map((item) => (
-                                    <tr key={item.product_listings_id} className="hover:bg-slate-50/50 transition-colors">
+                                    <tr key={item.product_listings_id} className="hover:bg-green-50/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <img
@@ -209,7 +209,7 @@ function RetailerInventory() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-rose-600 font-bold">₹{item.price}</td>
+                                        <td className="px-6 py-4 text-green-600 font-bold">₹{item.price}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${item.stock < 5 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
                                                 {item.stock} units
@@ -224,7 +224,7 @@ function RetailerInventory() {
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(item.product_listings_id)}
-                                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={18} />
                                             </button>
@@ -242,7 +242,7 @@ function RetailerInventory() {
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
                         {/* Modal Header */}
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-rose-50/30">
+                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-green-50/50">
                             <h2 className="text-xl font-extrabold text-slate-900">
                                 {editingId ? "Edit Listing" : "Add to Inventory"}
                             </h2>
@@ -255,14 +255,14 @@ function RetailerInventory() {
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('search')}
-                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'search' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'search' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                 >
                                     Search Existing
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('create')}
-                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'create' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'create' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                 >
                                     Create New
                                 </button>
@@ -281,7 +281,7 @@ function RetailerInventory() {
                                             <input
                                                 type="text"
                                                 placeholder="Type product name (e.g. Apple)..."
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                                className="w-full pl-10 pr-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                                                 value={searchQuery}
                                                 onChange={handleSearch}
                                                 onKeyDown={handleKeyDown}
@@ -295,7 +295,7 @@ function RetailerInventory() {
                                                     <div
                                                         key={prod.product_id}
                                                         onClick={(e) => handleResultClick(prod, e)}
-                                                        className="p-3 hover:bg-rose-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
+                                                        className="p-3 hover:bg-green-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
                                                     >
                                                         <img src={prod.image_url || 'https://via.placeholder.com/30'} className="w-8 h-8 rounded bg-slate-200" alt="" />
                                                         <span className="text-sm font-bold text-slate-700">{prod.name}</span>
@@ -314,7 +314,7 @@ function RetailerInventory() {
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Product Name</label>
                                         <input
                                             required
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className="w-full px-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                                             placeholder="e.g. Homemade Jam"
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -323,7 +323,7 @@ function RetailerInventory() {
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Description</label>
                                         <textarea
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className="w-full px-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                                             placeholder="Short description..."
                                             rows="2"
                                             value={formData.description}
@@ -335,12 +335,12 @@ function RetailerInventory() {
                                         <div className="relative">
                                             <ImageIcon className="absolute left-3 top-3.5 text-slate-400" size={18} />
                                             <input
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                                className="w-full pl-10 pr-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                                                 placeholder="https://..."
                                                 value={formData.image_url}
                                                 onChange={e => setFormData({ ...formData, image_url: e.target.value })}
                                             />
-                                    
+
                                         </div>
                                     </div>
                                     {/* CATEGORY SELECTOR */}
@@ -352,13 +352,13 @@ function RetailerInventory() {
                                         {/* Search box */}
                                         <input
                                             type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className="w-full px-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                                             placeholder="Search or create (e.g. Snacks)..."
                                             value={categorySearch}
                                             onChange={async e => {
                                                 const value = e.target.value;
                                                 setCategorySearch(value);
-                                                
+
                                                 if (value.length >= 1) {
                                                     const results = await searchCategories(value);
                                                     setCategoryResults(results);
@@ -377,7 +377,7 @@ function RetailerInventory() {
                                                 {categoryResults.map(cat => (
                                                     <div
                                                         key={cat.category_id}
-                                                        className="p-3 hover:bg-rose-50 cursor-pointer"
+                                                        className="p-3 hover:bg-green-50 cursor-pointer"
                                                         onClick={() => {
                                                             setSelectedCategories([...selectedCategories, cat]);
                                                             setCategorySearch("");       // autocomplete fill
@@ -391,7 +391,7 @@ function RetailerInventory() {
                                                 {/* Create new only if no matches */}
                                                 {categoryResults.length === 0 && (
                                                     <div
-                                                        className="p-3 bg-rose-50 text-rose-600 font-bold cursor-pointer"
+                                                        className="p-3 bg-green-50 text-green-600 font-bold cursor-pointer"
                                                         onClick={async () => {
                                                             const { data: newCat } = await createCategory(categorySearch);
                                                             setSelectedCategories([...selectedCategories, newCat]);
@@ -408,7 +408,7 @@ function RetailerInventory() {
                                         {/* Selected category chips */}
                                         <div className="flex flex-wrap gap-2 mt-3">
                                             {selectedCategories.map(cat => (
-                                                <div key={cat.category_id} className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold flex items-center gap-2">
+                                                <div key={cat.category_id} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-2">
                                                     {cat.category_name}
                                                     <X
                                                         size={14}
@@ -427,14 +427,14 @@ function RetailerInventory() {
 
                             {/* SELECTED PRODUCT (Showing during Search or Edit) */}
                             {selectedProduct && (
-                                <div className="mt-4 mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-between">
+                                <div className="mt-4 mb-6 p-4 bg-green-50 border border-green-100 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <img src={selectedProduct.image_url || 'https://via.placeholder.com/40'} className="w-12 h-12 rounded-lg bg-white" alt="" />
                                         <div>
                                             <p className="font-bold text-slate-900">{selectedProduct.name}</p>
                                             {/* Only show Change button if NOT editing */}
                                             {!editingId && (
-                                                <button type="button" onClick={() => { setSelectedProduct(null); setSearchQuery(''); }} className="text-xs text-rose-600 font-bold hover:underline">Change</button>
+                                                <button type="button" onClick={() => { setSelectedProduct(null); setSearchQuery(''); }} className="text-xs text-green-600 font-bold hover:underline">Change</button>
                                             )}
                                         </div>
                                     </div>
@@ -451,7 +451,7 @@ function RetailerInventory() {
                                             <DollarSign className="absolute left-3 top-3.5 text-slate-400" size={14} />
                                             <input
                                                 type="number" required min="0" step="0.01"
-                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-slate-800"
+                                                className="w-full pl-8 pr-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-bold text-slate-800"
                                                 placeholder="0.00"
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
@@ -464,7 +464,7 @@ function RetailerInventory() {
                                             <Package className="absolute left-3 top-3.5 text-slate-400" size={14} />
                                             <input
                                                 type="number" required min="0"
-                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-slate-800"
+                                                className="w-full pl-8 pr-4 py-3 bg-green-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-bold text-slate-800"
                                                 placeholder="0"
                                                 value={formData.stock}
                                                 onChange={e => setFormData({ ...formData, stock: e.target.value })}
@@ -478,7 +478,7 @@ function RetailerInventory() {
                             <button
                                 type="submit"
                                 disabled={!formData.price || !formData.stock || (activeTab === 'search' && !selectedProduct) || (activeTab === 'create' && !formData.name)}
-                                className="w-full mt-8 py-4 bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-600 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full mt-8 py-4 bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {editingId ? 'Update Listing' : (activeTab === 'search' ? 'List Product' : 'Create & List')}
                             </button>

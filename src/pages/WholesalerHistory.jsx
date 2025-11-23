@@ -37,10 +37,10 @@ function WholesalerHistory() {
                 <p className="text-slate-500">Past bulk orders you have successfully fulfilled or cancelled.</p>
             </div>
 
-            <div className="bg-white border border-rose-100 rounded-[2rem] shadow-sm overflow-hidden">
+            <div className="bg-white border border-green-100 rounded-[2rem] shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-rose-50/50 text-slate-700 font-bold uppercase tracking-wider">
+                        <thead className="bg-green-50 text-slate-700 font-bold uppercase tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">Date</th>
                                 <th className="px-6 py-4">Item Details</th>
@@ -48,19 +48,19 @@ function WholesalerHistory() {
                                 <th className="px-6 py-4 text-right">Final Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-rose-50">
+                        <tbody className="divide-y divide-green-50">
                             {loading ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">Loading history...</td></tr>
                             ) : orders.length === 0 ? (
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">No order history found.</td></tr>
                             ) : (
                                 orders.map((item) => (
-                                    <tr key={item.order_item_id} className="hover:bg-rose-50/30 transition-colors">
+                                    <tr key={item.order_item_id} className="hover:bg-green-50/30 transition-colors">
 
                                         {/* Date */}
                                         <td className="px-6 py-4 text-slate-500">
                                             <div className="flex items-center gap-2">
-                                                <Calendar size={16} className="text-rose-300" />
+                                                <Calendar size={16} className="text-green-300" />
                                                 {new Date(item.order?.ordered_at).toLocaleDateString()}
                                             </div>
                                             <div className="text-xs pl-6 pt-1 opacity-70">

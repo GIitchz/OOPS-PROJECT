@@ -211,7 +211,7 @@ export default function DashboardPage() {
         const maxP = reset ? priceBounds.max : Number(maxPrice);
         const distanceLimit = maxDistance ? Number(maxDistance) : undefined;
         const sellerIds = reset ? retailers.map(i => i.seller_id) : (selectedRetailers.length > 0) ? selectedRetailers : retailers.map(i => i.seller_id);
-        const categoryIds = reset? categories.map(c => c.category_id) : (selectedCategories.length > 0)? selectedCategories : categories.map(c => c.category_id);
+        const categoryIds = reset ? categories.map(c => c.category_id) : (selectedCategories.length > 0) ? selectedCategories : categories.map(c => c.category_id);
 
         setLoadingProducts(true);
 
@@ -242,8 +242,8 @@ export default function DashboardPage() {
         } else if (currentSortType === 'price_desc') {
             filter.orderBy = 'price';
             filter.priceAsc = false;
-        } else if(currentSortType === 'distance'){
-            filter.orderBy='distance';
+        } else if (currentSortType === 'distance') {
+            filter.orderBy = 'distance';
         } else {
             filter.orderBy = 'relevance'; // Default
         }
@@ -267,25 +267,25 @@ export default function DashboardPage() {
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-rose-50 text-rose-400 font-medium animate-pulse">
+        <div className="min-h-screen flex items-center justify-center bg-green-50 text-green-400 font-medium animate-pulse">
             Loading marketplace...
         </div>
     );
 
     return (
-        <div className="min-h-[calc(100vh-80px)] bg-rose-50 flex flex-col md:flex-row">
+        <div className="min-h-[calc(100vh-80px)] bg-green-50 flex flex-col md:flex-row">
 
             {/* ───────────────── LEFT SIDEBAR ───────────────── */}
-            <aside className="w-full md:w-72 bg-white border-r border-rose-100 p-6 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar z-40">
+            <aside className="w-full md:w-72 bg-white border-r border-green-100 p-6 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar z-40">
 
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-2">
-                        <Filter className="text-rose-500" size={20} />
+                        <Filter className="text-green-500" size={20} />
                         <h2 className="text-xl font-extrabold text-slate-900">Filters</h2>
                     </div>
                     <button
                         onClick={clearAllFilters}
-                        className="text-xs font-bold text-rose-500 hover:text-rose-700"
+                        className="text-xs font-bold text-green-500 hover:text-green-700"
                     >
                         Reset
                     </button>
@@ -314,17 +314,17 @@ export default function DashboardPage() {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Sellers</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                         {retailers.map(r => (
-                            <label key={r.seller_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
+                            <label key={r.seller_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-green-50 cursor-pointer transition-colors group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-rose-500 checked:bg-rose-500 transition-all"
+                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-green-500 checked:bg-green-500 transition-all"
                                         checked={selectedRetailers.includes(r.seller_id)}
                                         onChange={() => toggleRetailer(r.seller_id)}
                                     />
                                     <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} strokeWidth={4} />
                                 </div>
-                                <span className="text-sm font-medium text-slate-600 group-hover:text-rose-600 transition-colors">{r.name}</span>
+                                <span className="text-sm font-medium text-slate-600 group-hover:text-green-600 transition-colors">{r.name}</span>
                             </label>
                         ))}
                         {retailers.length === 0 && <p className="text-sm text-slate-400 italic">No sellers found.</p>}
@@ -335,11 +335,11 @@ export default function DashboardPage() {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Categories</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                         {categories.map(c => (
-                            <label key={c.category_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
+                            <label key={c.category_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-green-50 cursor-pointer transition-colors group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-rose-500 checked:bg-rose-500 transition-all"
+                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-green-500 checked:bg-green-500 transition-all"
                                         checked={selectedCategories.includes(c.category_id)}
                                         onChange={() =>
                                             setSelectedCategories(prev =>
@@ -351,7 +351,7 @@ export default function DashboardPage() {
                                     />
                                     <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} strokeWidth={4} />
                                 </div>
-                                <span className="text-sm font-medium text-slate-600 group-hover:text-rose-600 transition-colors">
+                                <span className="text-sm font-medium text-slate-600 group-hover:text-green-600 transition-colors">
                                     {c.category_name}
                                 </span>
                             </label>
@@ -366,7 +366,7 @@ export default function DashboardPage() {
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Max Dist (km)</label>
                         <input
                             type="number"
-                            className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none transition-all font-medium text-slate-700"
+                            className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 outline-none transition-all font-medium text-slate-700"
                             placeholder="Any"
                             value={maxDistance}
                             onChange={(e) => setMaxDistance(e.target.value)}
@@ -376,21 +376,21 @@ export default function DashboardPage() {
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sort By</label>
                         <div className="relative">
                             <select
-                                className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none transition-all font-medium text-slate-700 text-sm appearance-none cursor-pointer"
+                                className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 outline-none transition-all font-medium text-slate-700 text-sm appearance-none cursor-pointer"
                                 value={sortType}
                                 onChange={e => setSortType(e.target.value)}
                             >
                                 <option value="">Recommended</option>
                                 <option value="price_asc">Price: Low to High</option>
                                 <option value="price_desc">Price: High to Low</option>
-                                <option value="distance" disabled={coord?false:true}>Nearest Distance</option>
+                                <option value="distance" disabled={coord ? false : true}>Nearest Distance</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <button
-                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-rose-500 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all duration-300"
+                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-green-500 hover:shadow-green-200 hover:-translate-y-0.5 transition-all duration-300"
                     onClick={() => applyFilters(false)}
                 >
                     Apply Filters
@@ -405,17 +405,17 @@ export default function DashboardPage() {
                     <div>
                         <h1 className="text-3xl font-extrabold text-slate-900">Marketplace</h1>
                         <p className="text-slate-500">
-                            Showing <span className="font-bold text-rose-500">{filtered.length}</span> items
+                            Showing <span className="font-bold text-green-500">{filtered.length}</span> items
                         </p>
                     </div>
 
                     <div className="relative w-full md:w-96">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-rose-400" />
+                            <Search className="h-5 w-5 text-green-400" />
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-11 pr-4 py-3 bg-white border border-rose-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent shadow-sm transition-all"
+                            className="block w-full pl-11 pr-4 py-3 bg-white border border-green-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm transition-all"
                             placeholder="Search for items..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -425,19 +425,19 @@ export default function DashboardPage() {
 
                 {/* Product Grid */}
                 {loadingProducts ? (
-                    <div className="flex justify-center items-center h-64 text-rose-400 font-medium animate-pulse">
+                    <div className="flex justify-center items-center h-64 text-green-400 font-medium animate-pulse">
                         Updating results...
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-96 text-center bg-white rounded-[2rem] border border-rose-50">
-                        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-4">
-                            <Search className="text-rose-300" size={32} />
+                    <div className="flex flex-col items-center justify-center h-96 text-center bg-white rounded-[2rem] border border-green-50">
+                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                            <Search className="text-green-300" size={32} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900">No products found</h3>
                         <p className="text-slate-500 mt-2 max-w-xs">Try adjusting your filters or search term.</p>
                         <button
                             onClick={clearAllFilters}
-                            className="mt-6 text-rose-600 font-bold hover:underline"
+                            className="mt-6 text-green-600 font-bold hover:underline"
                         >
                             Clear all filters
                         </button>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {filtered.map(product => (
                             <div key={product.id} className="h-full">
-                                <ProductCard product={product} displayDist={true}/>
+                                <ProductCard product={product} displayDist={true} />
                             </div>
                         ))}
                     </div>

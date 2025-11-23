@@ -65,7 +65,7 @@ function WholesalerDashboard() {
         fetchData();
     }, [user]);
 
-    if (loading) return <div className="p-10 text-center text-rose-400 font-bold animate-pulse">Loading dashboard...</div>;
+    if (loading) return <div className="p-10 text-center text-green-400 font-bold animate-pulse">Loading dashboard...</div>;
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -79,28 +79,28 @@ function WholesalerDashboard() {
 
             {/* Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md transition-all">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-green-100 text-green-600"><DollarSign size={24} /></div>
                     </div>
                     <h3 className="text-3xl font-extrabold text-slate-900">₹{stats.sales.toLocaleString('en-IN')}</h3>
                     <p className="text-slate-500 font-bold text-sm mt-1">Today's Revenue</p>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md transition-all">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="p-3 rounded-2xl bg-rose-100 text-rose-600"><ShoppingBag size={24} /></div>
+                        <div className="p-3 rounded-2xl bg-green-50 text-green-600"><ShoppingBag size={24} /></div>
                     </div>
                     <h3 className="text-3xl font-extrabold text-slate-900">{stats.pending}</h3>
                     <p className="text-slate-500 font-bold text-sm mt-1">Pending Shipments</p>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md transition-all">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-orange-100 text-orange-600"><AlertTriangle size={24} /></div>
                     </div>
                     <h3 className="text-3xl font-extrabold text-slate-900">{stats.lowStock}</h3>
                     <p className="text-slate-500 font-bold text-sm mt-1">Low Bulk Stock</p>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-rose-100 hover:shadow-md transition-all">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-green-100 hover:shadow-md transition-all">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 rounded-2xl bg-indigo-100 text-indigo-600"><Users size={24} /></div>
                     </div>
@@ -110,14 +110,14 @@ function WholesalerDashboard() {
             </div>
 
             {/* Live Orders */}
-            <div className="bg-white rounded-[2rem] shadow-sm border border-rose-100 p-8">
+            <div className="bg-white rounded-[2rem] shadow-sm border border-green-100 p-8">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-slate-900">Live Orders</h2>
-                    <button onClick={() => navigate('/admin/wholesaler/orders')} className="text-sm font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1">View All <ArrowRight size={16} /></button>
+                    <button onClick={() => navigate('/admin/wholesaler/orders')} className="text-sm font-bold text-green-600 hover:text-green-700 flex items-center gap-1">View All <ArrowRight size={16} /></button>
                 </div>
                 <div className="space-y-4">
                     {recentOrders.map((order) => (
-                        <div key={order.order_item_id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-rose-200 transition-colors">
+                        <div key={order.order_item_id} className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-transparent hover:border-green-200 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-700 text-xs">#{order.order_item_id}</div>
                                 <div>

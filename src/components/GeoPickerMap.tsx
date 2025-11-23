@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { AlertTriangle, Search, LocateFixed } from "lucide-react"; // Imported LocateFixed for the new button
+import { AlertTriangle, Search, LocateFixed } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from '@react-google-maps/api';
 
 // --- CONFIGURATION ---
@@ -20,7 +20,7 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
 
     const [selectedLocation, setSelectedLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const [isLocating, setIsLocating] = useState(false); // New state for loading indicator
+    const [isLocating, setIsLocating] = useState(false);
 
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const geocoderRef = useRef<google.maps.Geocoder | null>(null);
@@ -31,7 +31,6 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
         libraries: MAP_LIBRARIES as never[],
     });
 
-    // Initialize Geocoder
     useEffect(() => {
         if (isLoaded && !geocoderRef.current) {
             // @ts-ignore
@@ -39,9 +38,6 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
         }
     }, [isLoaded]);
 
-    // **REMOVED** the resetForm function as requested
-
-    // Function to parse place details and set location state
     const setLocationFromPlace = (place: google.maps.places.PlaceResult, lat: number, lng: number) => {
         setSelectedLocation({ lat, lng });
 
@@ -86,8 +82,7 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
             }
         });
     };
-    
-    // --- NEW FUNCTIONALITY: Get Current Location ---
+
     const handleGetCurrentLocation = () => {
         if (!navigator.geolocation) {
             setStatusMessage({ type: 'error', message: "Geolocation is not supported by your browser." });
@@ -107,13 +102,11 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
                 const lng = position.coords.longitude;
                 const latLng = new window.google.maps.LatLng(lat, lng);
 
-                // Use Geocoder to get the formatted address
                 geocoderRef.current!.geocode({ location: latLng }, (results, status) => {
                     setIsLocating(false);
                     if (status === window.google.maps.GeocoderStatus.OK && results?.[0]) {
                         setLocationFromPlace(results[0], lat, lng);
                     } else {
-                        // If Geocoding fails, still set the coordinates
                         setSelectedLocation({ lat, lng });
                         setStatusMessage({ type: 'success', message: "Location set to current coordinates. Address could not be resolved." });
                         if (addressInputRef.current) {
@@ -131,7 +124,6 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
         );
     };
 
-    // The submission handler now runs on a button click, no form event to prevent
     const handleSelectLocation = () => {
 
         if (!selectedLocation) {
@@ -141,7 +133,7 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
 
         const formattedAddress = statusMessage?.message.startsWith("Location set: ")
             ? statusMessage.message.substring("Location set: ".length)
-            : addressInputRef.current?.value || "Address not fully resolved."; // Use input value as fallback
+            : addressInputRef.current?.value || "Address not fully resolved.";
 
         onLocationPicked({
             lat: selectedLocation.lat,
@@ -149,13 +141,11 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
             formatted_address: formattedAddress
         });
 
-        // Optionally show a temporary success message before the parent closes the map
         setStatusMessage({ type: 'success', message: successText });
     };
 
     return (
         <div className="space-y-4">
-            {/* Status Message */}
             {statusMessage && (
                 <div className={`p-4 rounded-xl font-medium flex items-start gap-3 ${statusMessage.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                     {statusMessage.type === 'error' && <AlertTriangle size={20} className="mt-0.5" />}
@@ -163,9 +153,8 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
                 </div>
             )}
 
-            <div className="space-y-4"> {/* Used <div> instead of <form> */}
+            <div className="space-y-4">
 
-                {/* Location Search Bar (Autocomplete is now wrapped in a simple div) */}
                 {isLoaded ? (
                     <div className="relative">
                         <Autocomplete
@@ -179,7 +168,7 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
                                     placeholder="Search for an Address or Landmark"
                                     ref={addressInputRef}
                                     required
-                                    className="w-full p-4 pl-12 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-medium text-slate-800"
+                                    className="w-full p-4 pl-12 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition-all font-medium text-slate-800"
                                 />
                                 <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             </div>
@@ -193,12 +182,10 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
                     />
                 )}
 
-                {/* Google Map */}
                 <div className="w-full h-80 rounded-xl overflow-hidden border-2 border-slate-200">
                     {isLoaded ? (
                         <GoogleMap
                             mapContainerStyle={{ width: "100%", height: "100%" }}
-                            // Center on selected location, then default, then current location if loading
                             center={selectedLocation || DEFAULT_CENTER}
                             zoom={selectedLocation ? 15 : 10}
                             onClick={handleMapClick}
@@ -215,17 +202,15 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
                     )}
                 </div>
 
-                {/* Log Button and Get Current Location Button */}
                 <div className="flex gap-4 pt-4">
                     <button
                         type="button"
-                        onClick={handleSelectLocation} // Calls the function that triggers onLocationPicked
-                        className="flex-1 py-4 bg-rose-500 text-white rounded-xl font-bold shadow-lg shadow-rose-200 hover:bg-rose-600 hover:-translate-y-0.5 transition-all"
+                        onClick={handleSelectLocation}
+                        className="flex-1 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition-all"
                         disabled={!selectedLocation || isLocating}
                     >
                         {submitText}
                     </button>
-                    {/* 👇 NEW BUTTON: Get Current Location */}
                     <button
                         type="button"
                         className="flex items-center justify-center gap-1 px-8 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all disabled:opacity-50"
@@ -241,8 +226,6 @@ export const GeoPickerMap = ({ onLocationPicked, submitText, successText }: GeoP
     );
 };
 
-// --- StaticLocationMap component remains unchanged ---
-
 const DEFAULT_ZOOM = 15;
 
 export type LocationCoordinates = {
@@ -251,34 +234,28 @@ export type LocationCoordinates = {
 };
 
 interface StaticLocationMapProps {
-    // Required fixed coordinates to display
     location: LocationCoordinates;
-    // Optional zoom level
     zoom?: number;
-    // Optional title to display above the map
-    title?: string; 
+    title?: string;
 }
 
 
 export const StaticLocationMap = ({ location, zoom = DEFAULT_ZOOM, title = "Saved Location" }: StaticLocationMapProps) => {
-    
-    // The useJsApiLoader is necessary to load the Google Maps script
+
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: GOOGLE_MAPS_API_KEY,
         libraries: MAP_LIBRARIES as never[],
     });
 
-    // Configuration object for map options (disables all user interaction)
     const mapOptions = {
-        zoomControl: true, // Allow zooming in/out, but not location change
+        zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        // Disable dragging/panning and double-click zoom
         draggable: false,
         scrollwheel: false,
         disableDoubleClickZoom: true,
-        clickableIcons: false, // Prevents clicks on points of interest
+        clickableIcons: false,
     };
 
     if (!isLoaded) {
@@ -291,16 +268,13 @@ export const StaticLocationMap = ({ location, zoom = DEFAULT_ZOOM, title = "Save
 
     return (
         <div className="space-y-4">
-            {/* Google Map */}
             <div className="w-full h-80 rounded-xl overflow-hidden border-2 border-slate-200">
                 <GoogleMap
                     mapContainerStyle={{ width: "100%", height: "100%" }}
                     center={location}
                     zoom={zoom}
-                    // 🚨 IMPORTANT: onClick is removed, and options are set to disable interaction
                     options={mapOptions}
                 >
-                    {/* Fixed Marker based on the prop location */}
                     <Marker position={location} />
                 </GoogleMap>
             </div>
