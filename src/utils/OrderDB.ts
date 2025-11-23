@@ -119,76 +119,88 @@ export const getOrders = async (user: UserInterface, limit: number = 10): Promis
 // Define the interface for the payment result you expect back
 interface PaymentResult {
     payment_ref: string | null;
-    payment_mode: 'online';
+    payment_mode: 'online'|'offline';
     status: 'succeeded' | 'failed';
     error: string | null;
 }
 
-export const completePayment = async (total: number, userId: string): Promise<PaymentResult> => {
+export const completePayment = async (total: number, userId: string, mode:'online'|'cod'): Promise<PaymentResult> => {
     // 1. Initiate Stripe Checkout to get the URL
     // You MUST pass the current user's ID or a unique order reference
     // so your success page knows what to report back.
-    const userRef = "UNIQUE_USER_OR_CART_ID"; // Replace with actual user/cart identifier
-    const { url, error } = await initiateStripeCheckout(total, userId); 
 
-    if (error || !url) {
-        return {
-            payment_ref: null,
-            payment_mode: 'online',
-            status: 'failed',
-            error: error || 'Failed to initiate Stripe Checkout session'
-        };
-    }
+    if(mode==='online') {
 
-    return new Promise((resolve) => {
-        // 2. Open Stripe Checkout in a new window
-        const stripeWindow = window.open(url, '_blank', 'width=800,height=600'); 
-        
-        if (!stripeWindow) {
-            resolve({
+        const userRef = "UNIQUE_USER_OR_CART_ID"; // Replace with actual user/cart identifier
+        const { url, error } = await initiateStripeCheckout(total, userId); 
+    
+        if (error || !url) {
+            return {
                 payment_ref: null,
                 payment_mode: 'online',
                 status: 'failed',
-                error: 'Failed to open the payment window. Check popup blockers.'
-            });
-            return;
+                error: error || 'Failed to initiate Stripe Checkout session'
+            };
         }
-
-        // 3. Listen for a message from the newly opened window
-        const messageListener = (event: MessageEvent) => {
-            // Ensure the message comes from a trusted origin (your own domain)
-            if (event.origin !== window.location.origin) {
-                return; 
+    
+        return new Promise((resolve) => {
+            // 2. Open Stripe Checkout in a new window
+            const stripeWindow = window.open(url, '_blank', 'width=800,height=600'); 
+            
+            if (!stripeWindow) {
+                resolve({
+                    payment_ref: null,
+                    payment_mode: 'online',
+                    status: 'failed',
+                    error: 'Failed to open the payment window. Check popup blockers.'
+                });
+                return;
             }
-
-            const { type, status, sessionId, error, userId:userRef } = event.data;
-
-            // Only process messages relevant to the payment flow
-            if (type === "stripePaymentResult" && userId===userRef) {
-                window.removeEventListener("message", messageListener); // Stop listening
-
-                if (status === "succeeded" && sessionId) {
-                    // Payment successful, resolve the Promise
-                    resolve({
-                        payment_ref: sessionId, // Use session ID as the initial reference
-                        payment_mode: 'online',
-                        status: 'succeeded',
-                        error: null
-                    });
-                } else {
-                    // Payment failed or cancelled, resolve the Promise with failure
-                    resolve({
-                        payment_ref: sessionId || null,
-                        payment_mode: 'online',
-                        status: 'failed',
-                        error: error || "Payment failed or was cancelled."
-                    });
+    
+            // 3. Listen for a message from the newly opened window
+            const messageListener = (event: MessageEvent) => {
+                // Ensure the message comes from a trusted origin (your own domain)
+                if (event.origin !== window.location.origin) {
+                    return; 
                 }
-            }
-        };
-
-        window.addEventListener("message", messageListener);
-    });
+    
+                const { type, status, sessionId, error, userId:userRef } = event.data;
+    
+                // Only process messages relevant to the payment flow
+                if (type === "stripePaymentResult" && userId===userRef) {
+                    window.removeEventListener("message", messageListener); // Stop listening
+    
+                    if (status === "succeeded" && sessionId) {
+                        // Payment successful, resolve the Promise
+                        resolve({
+                            payment_ref: sessionId, // Use session ID as the initial reference
+                            payment_mode: 'online',
+                            status: 'succeeded',
+                            error: null
+                        });
+                    } else {
+                        // Payment failed or cancelled, resolve the Promise with failure
+                        resolve({
+                            payment_ref: sessionId || null,
+                            payment_mode: 'online',
+                            status: 'failed',
+                            error: error || "Payment failed or was cancelled."
+                        });
+                    }
+                }
+            };
+    
+            window.addEventListener("message", messageListener);
+        });
+    }
+    else {
+        return ({
+            payment_ref: null,
+            payment_mode: 'offline',
+            status: 'succeeded',
+            error: null
+        });
+    }
 };
 
 
@@ -219,8 +231,8 @@ export async function getSellerOrders(sellerId: string) {
 /* ----------------------------------------------------------
    5. Update Item Status
 -----------------------------------------------------------*/
-export async function updateOrderItemStatus(itemId: number, newStatus: string) {
-    const { error } = await Supabase.from('order_items').update({ order_status: "pending"}).eq('order_item_id', itemId);
+export async function updateOrderItemStatus(itemId: number, newStatus: "pending" | "delivering" | "completed" | "cancelled") {
+    const { error } = await Supabase.from('order_items').update({ order_status: newStatus}).eq('order_item_id', itemId);
     return { error };
 }
 

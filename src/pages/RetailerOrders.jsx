@@ -27,25 +27,7 @@ function RetailerOrders() {
 
     const handleStatusUpdate = async (item, newStatus) => {
 
-        // --- 1. STOCK CHECK LOGIC ---
-        if (newStatus === 'delivering' && item.order_status === 'pending') {
-            const listingId = item.listing_id || item.listing?.product_listings_id;
-
-            if (!listingId) {
-                console.error("Missing listing ID for stock check", item);
-                alert("Error: Could not identify listing to update stock.");
-                return;
-            }
-
-            const isAvailable = await checkStockAvailability(listingId, item.quantity);
-
-            if (!isAvailable) {
-                alert(`❌ INSUFFICIENT STOCK!\n\nOrder requires: ${item.quantity} units.\nYou do not have enough stock.\n\nPlease restock from the Wholesale Market first.`);
-                return;
-            }
-        }
-
-        // 2. Confirmation Check
+        // Confirmation Check
         if (newStatus === 'completed' || newStatus === 'cancelled') {
             const confirmMessage = newStatus === 'completed'
                 ? "Are you sure this order has been delivered?"
@@ -53,12 +35,12 @@ function RetailerOrders() {
             if (!window.confirm(confirmMessage)) return;
         }
 
-        // 3. Optimistic UI Update
+        // Optimistic UI Update
         setOrders(prev => prev.map(o =>
             o.order_item_id === item.order_item_id ? { ...o, order_status: newStatus } : o
         ));
 
-        // 4. Database Update
+        // Database Update
         const { error } = await updateOrderItemStatus(item.order_item_id, newStatus);
 
         if (error) {

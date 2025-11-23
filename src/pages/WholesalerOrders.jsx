@@ -24,31 +24,18 @@ function WholesalerOrders() {
     }, [user]);
 
     const handleStatusUpdate = async (item, newStatus) => {
-        // 1. STOCK CHECK (When Shipping)
-        if (newStatus === 'delivering' && item.order_status === 'pending') {
-            const listingId = item.listing_id || item.listing?.product_listings_id;
 
-            if (!listingId) return alert("Error: Could not identify listing.");
-
-            const isAvailable = await checkStockAvailability(listingId, item.quantity);
-            if (!isAvailable) {
-                return alert(`❌ INSUFFICIENT BULK STOCK!\n\nRetailer ordered: ${item.quantity} units.\nYou do not have enough stock.`);
-            }
-
-            await adjustListingStock(listingId, -item.quantity);
-        }
-
-        // 2. Confirmation
+        // Confirmation
         if (newStatus === 'completed' || newStatus === 'cancelled') {
             if (!window.confirm("Are you sure you want to finalize this order?")) return;
         }
 
-        // 3. Update UI
+        // Update UI
         setOrders(prev => prev.map(o =>
             o.order_item_id === item.order_item_id ? { ...o, order_status: newStatus } : o
         ));
 
-        // 4. Update DB
+        // Update DB
         const { error } = await updateOrderItemStatus(item.order_item_id, newStatus);
         if (error) {
             alert("Failed to update status.");

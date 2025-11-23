@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "./DatabaseInterfaces";
-import { UserInterface, UserDataInterface, ProductListingInterface, FilteredProductInterface } from "./Interfaces";
+import { UserInterface, UserDataInterface, ProductListingInterface, FilteredProductInterface, ReviewInterface } from "./Interfaces";
 import { FilterInterface, getFilteredListings, groupListingsByProduct } from "./productsDB";
 
 const SUPABASE_URL = "https://hopvgsttpmoofwlxhkbx.supabase.co";
@@ -79,6 +79,43 @@ export const getProductById = async (productId: string): Promise<FilteredProduct
     return product[0];
 };
 
+
+export const getListingReviews = async (listingId: string): Promise<{data:ReviewInterface[], error:PostgrestError|null}> => {
+  const { data, error } = await Supabase
+    .from('order_items')
+    .select(
+      // Select the required fields and navigate through the joins:
+      // order_items -> orders -> users
+      `
+        rating, 
+        feedback, 
+        orders (
+          ordered_at, 
+          buyer: users (
+            user_id,
+            name,
+            role: user_role
+          )
+        )
+      `
+    )
+    .eq('listing_id', listingId)
+    .not('rating', 'is', null)    // Only include items that have been rated
+
+  if (error) {
+    console.error('Error fetching reviews:', error);
+    return { data: [], error };
+  }
+
+  const reviews = data.map(item => ({
+    rating: item.rating,
+    feedback: item.feedback,
+    orderedAt: item.orders.ordered_at,
+    buyer: item.orders.buyer
+  }));
+
+  return { data: reviews, error: null };
+}
 
 export const getAllProducts = async (): Promise<FilteredProductInterface[]> => {
     const listings = await getFilteredListings({});

@@ -90,7 +90,7 @@ function CheckoutPage() {
         setLoading(true);
 
 
-        const payment = await completePayment(totalPrice, paymentMethod);
+        const payment = await completePayment(totalPrice, paymentMethod, paymentMethod);
 
         if(payment.error || (paymentMethod==='online'&&!payment.payment_ref)) {
             alert("Payment failed");

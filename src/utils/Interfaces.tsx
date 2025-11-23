@@ -65,6 +65,17 @@ export type OrderItemInterface = {
     feedback?: string;
 }
 
+export type ReviewInterface = {
+    rating: number;
+    feedback: string;
+    orderedAt: string;
+    buyer: {
+        user_id: string;
+        name: string;
+        role: "customer" | "retailer" | "wholesaler";
+    };
+}
+
 export type PaymentInterface = {
     amount: number;
     is_offline: boolean;
