@@ -9,7 +9,7 @@ app.use(express.json());
 const stripe = new Stripe("sk_test_51SVe5oF5yqxI3yG1Mr6VxxJ6tDF80NJDrcbgyjtUuvEstryQDnZpV4IX92SaUMexZgW8YABKNYkBIK72cpl1ZwFT00zMTZpFji");
 
 app.post("/create-checkout-session", async (req, res) => {
-    const { amount } = req.body;
+    const { amount, orderId } = req.body;
 
     try {
         const session = await stripe.checkout.sessions.create({
@@ -27,7 +27,7 @@ app.post("/create-checkout-session", async (req, res) => {
             mode: "payment",
 
             /** ⭐⭐ IMPORTANT ⭐⭐ */
-            success_url: "http://localhost:5173/order-success?session_id={CHECKOUT_SESSION_ID}",
+            success_url: "http://localhost:5173/order-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}",
             cancel_url: "http://localhost:5173/checkout"
         });
 

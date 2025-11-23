@@ -82,7 +82,7 @@ export interface SavedAddressInterface extends AddressInterface {
 
 export type OnlinePaymentInterface = {
     payment_ref: string | null;
-    payment_mode: "offline";
+    payment_mode: "offline" | "online";
 }
 
 export interface FilteredListingsInterface {

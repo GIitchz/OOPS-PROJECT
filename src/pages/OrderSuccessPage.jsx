@@ -1,40 +1,99 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { CheckCircle, ArrowRight } from "lucide-react";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import React, { useEffect, useState, useRef } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { CheckCircle, ArrowRight, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { updateOrderPaymentRef } from "../utils/OrderDB";
 
 function OrderSuccessPage() {
     const location = useLocation();
-    const { user } = useAuth(); // Get the user to check their role
-    const orderId = location.state?.orderId || null;
+    const [searchParams] = useSearchParams();
+    const { user } = useAuth();
+    
+    const [status, setStatus] = useState("initializing"); 
+    const [errorMsg, setErrorMsg] = useState("");
+    const processedRef = useRef(false); // Prevent double-execution in Strict Mode
 
-    // Dynamic Redirect Logic
-    // If Retailer -> Go to Wholesale Market
-    // If Customer -> Go to Main Dashboard
-    const continuePath = user?.role === 'retailer'
-        ? '/admin/retailer/wholesale'
-        : '/dashboard';
+    const orderId = location.state?.orderId || searchParams.get("order_id");
+    const sessionId = searchParams.get("session_id");
+
+    useEffect(() => {
+        if (processedRef.current) return; 
+
+        const handlePaymentUpdate = async () => {
+            if (sessionId && orderId) {
+                processedRef.current = true;
+                setStatus("updating");
+                
+                console.log(`Updating Order #${orderId} with Ref: ${sessionId}`);
+                
+                // Convert orderId to number just in case
+                const { error } = await updateOrderPaymentRef(Number(orderId), sessionId);
+
+                if (error) {
+                    console.error("Payment Update Failed:", error);
+                    setStatus("error");
+                    setErrorMsg(error.message || "Database update failed");
+                } else {
+                    console.log("Payment Update Success!");
+                    setStatus("confirmed");
+                    // Only clean URL if successful
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } else if (orderId) {
+                // COD Case
+                setStatus("confirmed");
+            }
+        };
+
+        handlePaymentUpdate();
+    }, [sessionId, orderId]);
+
+    const continuePath = user?.role === 'retailer' ? '/admin/retailer/wholesale' : '/dashboard';
 
     return (
         <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-rose-50 p-4">
             <div className="bg-white p-10 sm:p-12 rounded-[2rem] shadow-2xl shadow-rose-100 max-w-md w-full text-center border border-rose-100">
 
-                <div className="mx-auto h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <CheckCircle className="h-12 w-12 text-green-600" />
-                </div>
+                {status === 'error' ? (
+                    <div className="mx-auto h-24 w-24 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                        <AlertCircle className="h-12 w-12 text-red-600" />
+                    </div>
+                ) : (
+                    <div className="mx-auto h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                        <CheckCircle className="h-12 w-12 text-green-600" />
+                    </div>
+                )}
 
                 <h1 className="text-3xl font-extrabold text-slate-900 mb-3">
-                    Order Placed!
+                    {status === 'error' ? "Payment Recorded, But..." : "Order Placed!"}
                 </h1>
 
-                <p className="text-slate-500 mb-8 text-lg">
-                    Your order has been confirmed and will be on its way soon.
-                </p>
+                <div className="text-slate-500 mb-8 text-lg min-h-[3rem]">
+                    {status === "updating" && "Verifying payment with bank..."}
+                    {status === "confirmed" && "Your order has been confirmed and will be on its way soon."}
+                    {status === "error" && (
+                        <span className="text-red-500 text-sm">
+                            Payment succeeded on Stripe, but we couldn't update your receipt.<br/>
+                            Error: {errorMsg}
+                        </span>
+                    )}
+                </div>
 
                 {orderId && (
-                    <div className="bg-slate-50 p-4 rounded-xl mb-8 border border-slate-100">
-                        <p className="text-sm text-slate-500 uppercase tracking-wide font-bold mb-1">Order ID</p>
-                        <p className="text-xl font-mono font-bold text-slate-800">#{orderId}</p>
+                    <div className="bg-slate-50 p-4 rounded-xl mb-8 border border-slate-100 text-left">
+                        <p className="text-xs text-slate-400 uppercase tracking-wide font-bold mb-1">Receipt Details</p>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-slate-700">Order ID</span>
+                            <span className="font-mono font-bold text-slate-900">#{orderId}</span>
+                        </div>
+                        {sessionId && (
+                            <div className="flex justify-between items-center mt-1">
+                                <span className="text-sm font-bold text-slate-700">Ref</span>
+                                <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]" title={sessionId}>
+                                    {sessionId}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 )}
 
