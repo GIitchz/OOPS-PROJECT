@@ -330,7 +330,7 @@ function WholesaleMarket() {
 
                 {/* ───────────────── STICKY HORIZONTAL FILTER BAR ───────────────── */}
                 {/* FIX: Change top-[80px] to top-2 or top-0 */}
-                <div className="sticky top-2 bg-white p-4 rounded-2xl shadow-md flex flex-nowrap overflow-x-auto no-scrollbar gap-4 items-center border border-rose-100 mb-8 z-30">
+                <div className="sticky top-2 bg-white p-4 rounded-2xl shadow-md flex flex-nowrap gap-4 items-center border border-rose-100 mb-8 z-30">
                     
                     {/* Search Bar */}
                     <div className="relative w-full md:w-64">
@@ -379,7 +379,7 @@ function WholesaleMarket() {
                     <div className="relative">
                         <button 
                             // Close other dropdown when opening this one
-                            onClick={() => {setIsPriceFilterOpen(prev => !prev); if(!isPriceFilterOpen){setIsSellersFilterOpen(false);}}}
+                            onClick={() => {setIsPriceFilterOpen(prev => !prev); if(!isPriceFilterOpen){setIsSellersFilterOpen(false); setIsCategoriesFilterOpen(false);}}}
                             className={`p-2.5 font-bold rounded-xl flex items-center gap-1 transition-colors text-sm whitespace-nowrap ${isPriceFilterOpen ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'}`}
                         >
                             <Filter size={16} /> 
@@ -416,7 +416,7 @@ function WholesaleMarket() {
                     <div className="relative">
                         <button 
                             // Close other dropdown when opening this one
-                            onClick={() => {setIsSellersFilterOpen(prev => !prev); if(!isSellersFilterOpen){setIsPriceFilterOpen(false)}}}
+                            onClick={() => {setIsSellersFilterOpen(prev => !prev); if(!isSellersFilterOpen){setIsPriceFilterOpen(false); setIsCategoriesFilterOpen(false);}}}
                             className={`p-2.5 font-bold rounded-xl flex items-center gap-1 transition-colors text-sm whitespace-nowrap ${isSellersFilterOpen ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                         >
                             <Filter size={16} /> 
