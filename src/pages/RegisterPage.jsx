@@ -4,23 +4,27 @@ import RegistrationFlow from '../components/registration/RegistrationFlow';
 
 function RegisterPage() {
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        // Changed bg-stone-50 to a subtle top-to-bottom gradient. 
+        // Starts with a soft emerald tint at the top and fades to the neutral stone-50.
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-b from-emerald-50/50 to-stone-50">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
                     Create your account
                 </h2>
                 <p className="mt-2 text-center text-sm text-slate-600">
                     Or{' '}
-                    <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                    <Link 
+                        to="/login" 
+                        className="font-medium text-emerald-600 hover:text-emerald-500"
+                    >
                         sign in to your existing account
                     </Link>
                 </p>
             </div>
 
-            {/* 👇 MODIFICATION HERE: Removed sm:max-w-md to allow width expansion */}
-            {/* The flow component will now dictate the maximum width */}
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
+                {/* Form Container remains white and centered */}
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-emerald-100">
                     <RegistrationFlow />
                 </div>
             </div>

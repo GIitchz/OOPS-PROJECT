@@ -10,8 +10,16 @@ import {
     updateListing,
     searchCategories,
     createCategory,
-    addCategoryToProduct,
+    // Removed unused addCategoryToProduct
 } from '../utils/InventoryDB';
+
+// Define consistent color variables for clarity and easy future re-theming
+const PRIMARY_COLOR = 'emerald';
+const PRIMARY_SHADE = '600';
+const BG_LIGHT_SHADE = '50';
+const BORDER_SHADE = '200';
+const TEXT_DARK_SHADE = '900';
+const TEXT_MUTED_SHADE = '500';
 
 function RetailerInventory() {
     const { user } = useAuth();
@@ -70,6 +78,14 @@ function RetailerInventory() {
     const handleResultClick = (prod, e) => {
         e.preventDefault();
         e.stopPropagation();
+        // Check if the product is already listed by this retailer
+        const alreadyListed = listings.some(item => item.product.product_id === prod.product_id);
+        if (alreadyListed) {
+            alert("This product is already in your inventory. Please use the 'Edit' button on the main table to update it.");
+            closeModal();
+            return;
+        }
+
         setSelectedProduct(prod);
         setSearchResults([]);
         setSearchQuery(prod.name);
@@ -82,7 +98,7 @@ function RetailerInventory() {
         setFormData({
             price: item.price,
             stock: item.stock,
-            name: '',
+            name: '', // Not used in edit mode, but reset for consistency
             description: '',
             image_url: ''
         });
@@ -95,24 +111,25 @@ function RetailerInventory() {
 
         let error = null;
 
+        // SCENARIO 3: UPDATE EXISTING LISTING
         if (editingId) {
-            // SCENARIO 3: UPDATE EXISTING LISTING
             const res = await updateListing(editingId, {
                 price: formData.price,
                 stock: formData.stock
             });
             error = res.error;
         }
+        // SCENARIO 1: ADD EXISTING
         else if (activeTab === 'search') {
-            // SCENARIO 1: ADD EXISTING
             if (!selectedProduct) return alert("Please select a product first");
             const res = await createListingForExisting(user.id, selectedProduct.product_id, formData.price, formData.stock);
             error = res.error;
         }
+        // SCENARIO 2: CREATE NEW
         else {
-            // SCENARIO 2: CREATE NEW
             const res = await createNewProductAndListing(user.id,
-                { name: formData.name, description: formData.description, image_url: formData.image_url,categories: selectedCategories },
+                // Only pass category IDs when creating a product
+                { name: formData.name, description: formData.description, image_url: formData.image_url, category_ids: selectedCategories.map(c => c.category_id) },
                 formData.price,
                 formData.stock
             );
@@ -158,18 +175,22 @@ function RetailerInventory() {
         setSelectedProduct(null);
         setActiveTab('search');
         setEditingId(null); // Clear edit mode
+        // Reset category state on modal close
+        setCategorySearch("");
+        setCategoryResults([]);
+        setSelectedCategories([]);
     };
 
     return (
         <div className="space-y-6 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900">My Inventory</h1>
-                    <p className="text-slate-500">Manage products and pricing for your store.</p>
+                    <h1 className={`text-2xl font-extrabold text-slate-${TEXT_DARK_SHADE}`}>My Inventory</h1>
+                    <p className={`text-slate-${TEXT_MUTED_SHADE}`}>Manage products and pricing for your store.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="inline-flex items-center gap-2 bg-rose-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-rose-600 shadow-lg shadow-rose-200 transition-all hover:-translate-y-0.5"
+                    className={`inline-flex items-center gap-2 bg-${PRIMARY_COLOR}-${PRIMARY_SHADE} text-white px-4 py-2.5 rounded-xl font-bold hover:bg-${PRIMARY_COLOR}-700 shadow-lg shadow-${PRIMARY_COLOR}-200 transition-all hover:-translate-y-0.5`}
                 >
                     <Plus size={18} />
                     Add Item
@@ -177,10 +198,10 @@ function RetailerInventory() {
             </div>
 
             {/* LISTINGS TABLE */}
-            <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+            <div className={`bg-white border border-slate-${BORDER_SHADE} rounded-3xl shadow-sm overflow-hidden`}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-rose-50/50 text-slate-700 font-bold uppercase tracking-wider">
+                        <thead className={`bg-${PRIMARY_COLOR}-50 text-slate-700 font-bold uppercase tracking-wider`}>
                             <tr>
                                 <th className="px-6 py-4">Product</th>
                                 <th className="px-6 py-4">Price</th>
@@ -195,36 +216,36 @@ function RetailerInventory() {
                                 <tr><td colSpan="4" className="px-6 py-10 text-center text-slate-400">No products listed yet.</td></tr>
                             ) : (
                                 listings.map((item) => (
-                                    <tr key={item.product_listings_id} className="hover:bg-slate-50/50 transition-colors">
+                                    <tr key={item.product_listings_id} className={`hover:bg-${PRIMARY_COLOR}-50/30 transition-colors`}>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <img
                                                     src={item.product?.image_url || 'https://via.placeholder.com/40'}
-                                                    alt=""
-                                                    className="w-10 h-10 rounded-lg object-cover border border-slate-100"
+                                                    alt={item.product?.name}
+                                                    className={`w-10 h-10 rounded-lg object-cover border border-slate-${BORDER_SHADE}`}
                                                 />
                                                 <div>
-                                                    <p className="font-bold text-slate-900">{item.product?.name}</p>
+                                                    <p className={`font-bold text-slate-${TEXT_DARK_SHADE}`}>{item.product?.name}</p>
                                                     <p className="text-xs text-slate-400 line-clamp-1">{item.product?.description}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-rose-600 font-bold">₹{item.price}</td>
+                                        <td className={`px-6 py-4 text-${PRIMARY_COLOR}-${PRIMARY_SHADE} font-bold`}>₹{item.price}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${item.stock < 5 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${item.stock < 5 ? 'bg-orange-100 text-orange-700' : `bg-${PRIMARY_COLOR}-100 text-${PRIMARY_COLOR}-700`}`}>
                                                 {item.stock} units
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             <button
                                                 onClick={() => handleEdit(item)}
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                className={`p-2 text-slate-400 hover:text-blue-${PRIMARY_SHADE} hover:bg-blue-50 rounded-lg transition-colors`}
                                             >
                                                 <Edit2 size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(item.product_listings_id)}
-                                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={18} />
                                             </button>
@@ -242,11 +263,11 @@ function RetailerInventory() {
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
                         {/* Modal Header */}
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-rose-50/30">
-                            <h2 className="text-xl font-extrabold text-slate-900">
+                        <div className={`px-8 py-6 border-b border-slate-${BORDER_SHADE} flex justify-between items-center bg-${PRIMARY_COLOR}-50/50`}>
+                            <h2 className={`text-xl font-extrabold text-slate-${TEXT_DARK_SHADE}`}>
                                 {editingId ? "Edit Listing" : "Add to Inventory"}
                             </h2>
-                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                            <button onClick={closeModal} className={`text-slate-400 hover:text-slate-${PRIMARY_SHADE}`}><X size={24} /></button>
                         </div>
 
                         {/* Tabs - Only show if NOT editing */}
@@ -255,14 +276,14 @@ function RetailerInventory() {
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('search')}
-                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'search' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'search' ? `bg-white text-${PRIMARY_COLOR}-${PRIMARY_SHADE} shadow-sm` : `text-slate-${TEXT_MUTED_SHADE} hover:text-slate-700`}`}
                                 >
                                     Search Existing
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('create')}
-                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'create' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'create' ? `bg-white text-${PRIMARY_COLOR}-${PRIMARY_SHADE} shadow-sm` : `text-slate-${TEXT_MUTED_SHADE} hover:text-slate-700`}`}
                                 >
                                     Create New
                                 </button>
@@ -275,13 +296,13 @@ function RetailerInventory() {
                             {!editingId && activeTab === 'search' && (
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Find Product</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Find Product</label>
                                         <div className="relative">
                                             <Search className="absolute left-3 top-3.5 text-slate-400" size={18} />
                                             <input
                                                 type="text"
                                                 placeholder="Type product name (e.g. Apple)..."
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                                className={`w-full pl-10 pr-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none`}
                                                 value={searchQuery}
                                                 onChange={handleSearch}
                                                 onKeyDown={handleKeyDown}
@@ -290,15 +311,15 @@ function RetailerInventory() {
 
                                         {/* Search Results */}
                                         {searchResults.length > 0 && !selectedProduct && (
-                                            <div className="mt-2 bg-white border border-slate-100 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                                            <div className={`mt-2 bg-white border border-slate-100 rounded-xl shadow-lg max-h-40 overflow-y-auto`}>
                                                 {searchResults.map(prod => (
                                                     <div
                                                         key={prod.product_id}
                                                         onClick={(e) => handleResultClick(prod, e)}
-                                                        className="p-3 hover:bg-rose-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
+                                                        className={`p-3 hover:bg-${PRIMARY_COLOR}-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0`}
                                                     >
-                                                        <img src={prod.image_url || 'https://via.placeholder.com/30'} className="w-8 h-8 rounded bg-slate-200" alt="" />
-                                                        <span className="text-sm font-bold text-slate-700">{prod.name}</span>
+                                                        <img src={prod.image_url || 'https://via.placeholder.com/30'} className="w-8 h-8 rounded bg-slate-200" alt={prod.name} />
+                                                        <span className={`text-sm font-bold text-slate-700`}>{prod.name}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -311,19 +332,19 @@ function RetailerInventory() {
                             {!editingId && activeTab === 'create' && (
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Product Name</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Product Name</label>
                                         <input
                                             required
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className={`w-full px-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none`}
                                             placeholder="e.g. Homemade Jam"
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Description</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Description</label>
                                         <textarea
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className={`w-full px-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none`}
                                             placeholder="Short description..."
                                             rows="2"
                                             value={formData.description}
@@ -331,38 +352,41 @@ function RetailerInventory() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Image URL</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Image URL</label>
                                         <div className="relative">
                                             <ImageIcon className="absolute left-3 top-3.5 text-slate-400" size={18} />
                                             <input
-                                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                                className={`w-full pl-10 pr-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none`}
                                                 placeholder="https://..."
                                                 value={formData.image_url}
                                                 onChange={e => setFormData({ ...formData, image_url: e.target.value })}
                                             />
-                                    
+
                                         </div>
                                     </div>
-                                    {/* CATEGORY SELECTOR */}
+                                    {/* CATEGORY SELECTOR - Ensuring consistency */}
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>
                                             Categories
                                         </label>
 
                                         {/* Search box */}
                                         <input
                                             type="text"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none"
+                                            className={`w-full px-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none`}
                                             placeholder="Search or create (e.g. Snacks)..."
                                             value={categorySearch}
                                             onChange={async e => {
                                                 const value = e.target.value;
                                                 setCategorySearch(value);
-                                                
+
                                                 if (value.length >= 1) {
                                                     const results = await searchCategories(value);
-                                                    setCategoryResults(results);
-                                                    console.log(results);
+                                                    // Filter out already selected categories
+                                                    const filteredResults = results.filter(
+                                                        cat => !selectedCategories.some(sCat => sCat.category_id === cat.category_id)
+                                                    );
+                                                    setCategoryResults(filteredResults);
                                                 } else {
                                                     setCategoryResults([]);
                                                 }
@@ -371,48 +395,53 @@ function RetailerInventory() {
 
                                         {/* Autocomplete dropdown */}
                                         {categorySearch.length >= 1 && (
-                                            <div className="bg-white border rounded-xl shadow-lg mt-2 max-h-40 overflow-y-auto">
+                                            <div className={`bg-white border rounded-xl shadow-lg mt-2 max-h-40 overflow-y-auto z-10 relative`}>
 
                                                 {/* Existing categories */}
                                                 {categoryResults.map(cat => (
                                                     <div
                                                         key={cat.category_id}
-                                                        className="p-3 hover:bg-rose-50 cursor-pointer"
+                                                        className={`p-3 hover:bg-${PRIMARY_COLOR}-50 cursor-pointer`}
                                                         onClick={() => {
                                                             setSelectedCategories([...selectedCategories, cat]);
-                                                            setCategorySearch("");       // autocomplete fill
+                                                            setCategorySearch("");      // autocomplete fill
                                                             setCategoryResults([]);
                                                         }}
                                                     >
-                                                        {cat.category_name}
+                                                        <span className='font-medium text-slate-700'>{cat.category_name}</span>
                                                     </div>
                                                 ))}
 
                                                 {/* Create new only if no matches */}
                                                 {categoryResults.length === 0 && (
                                                     <div
-                                                        className="p-3 bg-rose-50 text-rose-600 font-bold cursor-pointer"
+                                                        className={`p-3 bg-${PRIMARY_COLOR}-50 text-${PRIMARY_COLOR}-${PRIMARY_SHADE} font-bold cursor-pointer border-t border-${PRIMARY_COLOR}-100`}
                                                         onClick={async () => {
-                                                            const { data: newCat } = await createCategory(categorySearch);
-                                                            setSelectedCategories([...selectedCategories, newCat]);
+                                                            const { data: newCat, error } = await createCategory(categorySearch);
+                                                            if (newCat) {
+                                                                setSelectedCategories([...selectedCategories, newCat]);
+                                                            } else {
+                                                                console.error(error);
+                                                                alert("Failed to create category. See console.");
+                                                            }
                                                             setCategorySearch("");
                                                             setCategoryResults([]);
                                                         }}
                                                     >
-                                                        + Create "{categorySearch}"
+                                                        <Plus size={14} className='inline-block mr-2' /> Create "{categorySearch}"
                                                     </div>
                                                 )}
                                             </div>
                                         )}
 
-                                        {/* Selected category chips */}
+                                        {/* Selected category chips - Consistent primary color use */}
                                         <div className="flex flex-wrap gap-2 mt-3">
                                             {selectedCategories.map(cat => (
-                                                <div key={cat.category_id} className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold flex items-center gap-2">
+                                                <div key={cat.category_id} className={`px-3 py-1 bg-${PRIMARY_COLOR}-100 text-${PRIMARY_COLOR}-700 rounded-full text-xs font-bold flex items-center gap-2`}>
                                                     {cat.category_name}
                                                     <X
                                                         size={14}
-                                                        className="cursor-pointer"
+                                                        className="cursor-pointer hover:text-red-500 transition-colors"
                                                         onClick={() =>
                                                             setSelectedCategories(selectedCategories.filter(c => c.category_id !== cat.category_id))
                                                         }
@@ -427,31 +456,31 @@ function RetailerInventory() {
 
                             {/* SELECTED PRODUCT (Showing during Search or Edit) */}
                             {selectedProduct && (
-                                <div className="mt-4 mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-between">
+                                <div className={`mt-4 mb-6 p-4 bg-${PRIMARY_COLOR}-50 border border-${PRIMARY_COLOR}-100 rounded-xl flex items-center justify-between`}>
                                     <div className="flex items-center gap-3">
-                                        <img src={selectedProduct.image_url || 'https://via.placeholder.com/40'} className="w-12 h-12 rounded-lg bg-white" alt="" />
+                                        <img src={selectedProduct.image_url || 'https://via.placeholder.com/40'} className="w-12 h-12 rounded-lg bg-white" alt={selectedProduct.name} />
                                         <div>
-                                            <p className="font-bold text-slate-900">{selectedProduct.name}</p>
+                                            <p className={`font-bold text-slate-${TEXT_DARK_SHADE}`}>{selectedProduct.name}</p>
                                             {/* Only show Change button if NOT editing */}
                                             {!editingId && (
-                                                <button type="button" onClick={() => { setSelectedProduct(null); setSearchQuery(''); }} className="text-xs text-rose-600 font-bold hover:underline">Change</button>
+                                                <button type="button" onClick={() => { setSelectedProduct(null); setSearchQuery(''); }} className={`text-xs text-${PRIMARY_COLOR}-${PRIMARY_SHADE} font-bold hover:underline`}>Change</button>
                                             )}
                                         </div>
                                     </div>
-                                    <Check className="text-green-500" />
+                                    <Check className={`text-${PRIMARY_COLOR}-500`} />
                                 </div>
                             )}
 
                             {/* COMMON FIELDS (Price & Stock) - Show if valid state */}
                             {(selectedProduct || activeTab === 'create') && (
-                                <div className={`grid grid-cols-2 gap-4 ${!editingId ? "mt-6 pt-6 border-t border-slate-100" : ""}`}>
+                                <div className={`grid grid-cols-2 gap-4 ${!editingId ? `mt-6 pt-6 border-t border-slate-${BORDER_SHADE}` : ""}`}>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Your Price (₹)</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Your Price (₹)</label>
                                         <div className="relative">
                                             <DollarSign className="absolute left-3 top-3.5 text-slate-400" size={14} />
                                             <input
                                                 type="number" required min="0" step="0.01"
-                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-slate-800"
+                                                className={`w-full pl-8 pr-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none font-bold text-slate-800`}
                                                 placeholder="0.00"
                                                 value={formData.price}
                                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
@@ -459,12 +488,12 @@ function RetailerInventory() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Stock Qty</label>
+                                        <label className={`block text-xs font-bold text-slate-${TEXT_MUTED_SHADE} uppercase tracking-wide mb-2`}>Stock Qty</label>
                                         <div className="relative">
                                             <Package className="absolute left-3 top-3.5 text-slate-400" size={14} />
                                             <input
                                                 type="number" required min="0"
-                                                className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-slate-800"
+                                                className={`w-full pl-8 pr-4 py-3 bg-${PRIMARY_COLOR}-${BG_LIGHT_SHADE} border border-slate-${BORDER_SHADE} rounded-xl focus:ring-2 focus:ring-${PRIMARY_COLOR}-500 outline-none font-bold text-slate-800`}
                                                 placeholder="0"
                                                 value={formData.stock}
                                                 onChange={e => setFormData({ ...formData, stock: e.target.value })}
@@ -478,7 +507,7 @@ function RetailerInventory() {
                             <button
                                 type="submit"
                                 disabled={!formData.price || !formData.stock || (activeTab === 'search' && !selectedProduct) || (activeTab === 'create' && !formData.name)}
-                                className="w-full mt-8 py-4 bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-600 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`w-full mt-8 py-4 bg-${PRIMARY_COLOR}-${PRIMARY_SHADE} text-white font-bold rounded-xl shadow-lg shadow-${PRIMARY_COLOR}-200 hover:bg-${PRIMARY_COLOR}-700 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 {editingId ? 'Update Listing' : (activeTab === 'search' ? 'List Product' : 'Create & List')}
                             </button>

@@ -205,13 +205,21 @@ export default function DashboardPage() {
         );
     };
 
+    // Toggle Category
+    const toggleCategory = (id: string) => {
+        setSelectedCategories(prev =>
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+        );
+    };
+
     //─ APPLY FILTERS ─────────────────────────────────────────────
     const applyFilters = (reset: boolean = false) => {
         const minP = reset ? priceBounds.min : Number(minPrice);
         const maxP = reset ? priceBounds.max : Number(maxPrice);
         const distanceLimit = maxDistance ? Number(maxDistance) : undefined;
-        const sellerIds = reset ? retailers.map(i => i.seller_id) : (selectedRetailers.length > 0) ? selectedRetailers : retailers.map(i => i.seller_id);
-        const categoryIds = reset? categories.map(c => c.category_id) : (selectedCategories.length > 0)? selectedCategories : categories.map(c => c.category_id);
+        // Logic for sellerIds/categoryIds now contained in loadData, just pass selection or undefined
+        const sellerIds = reset ? undefined : (selectedRetailers.length > 0) ? selectedRetailers : undefined;
+        const categoryIds = reset ? undefined : (selectedCategories.length > 0) ? selectedCategories : undefined;
 
         setLoadingProducts(true);
 
@@ -219,7 +227,7 @@ export default function DashboardPage() {
             minPrice: minP,
             maxPrice: maxP,
             sellerIds: sellerIds,
-            categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
+            categoryIds: categoryIds,
         };
 
         if (searchTerm !== "") {
@@ -242,8 +250,8 @@ export default function DashboardPage() {
         } else if (currentSortType === 'price_desc') {
             filter.orderBy = 'price';
             filter.priceAsc = false;
-        } else if(currentSortType === 'distance'){
-            filter.orderBy='distance';
+        } else if (currentSortType === 'distance') {
+            filter.orderBy = 'distance';
         } else {
             filter.orderBy = 'relevance'; // Default
         }
@@ -255,6 +263,7 @@ export default function DashboardPage() {
     // --- CLEAR FILTERS FUNCTION ---
     const clearAllFilters = () => {
         setSearchTerm("");
+        // Reset min/max price state to the overall bounds
         setMinPrice(priceBounds.min);
         setMaxPrice(priceBounds.max);
         setSelectedRetailers([]);
@@ -262,30 +271,40 @@ export default function DashboardPage() {
         setSortType("");
         setSelectedCategories([]);
 
-        // Reset with default filter values
-        applyFilters(true);
+        // Re-load the data (which will reset filter interface properties)
+        loadMarketplace(true); // Re-run initial load to refresh state
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-rose-50 text-rose-400 font-medium animate-pulse">
-            Loading marketplace...
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 text-emerald-500 font-extrabold text-lg">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading products...
         </div>
     );
 
     return (
-        <div className="min-h-[calc(100vh-80px)] bg-rose-50 flex flex-col md:flex-row">
+        // ***************************************************************
+        // CHANGE: Changed main container background to a very light gray
+        // (bg-slate-50) for a cleaner, less green-heavy look.
+        // ***************************************************************
+        <div className="min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col md:flex-row">
 
             {/* ───────────────── LEFT SIDEBAR ───────────────── */}
-            <aside className="w-full md:w-72 bg-white border-r border-rose-100 p-6 md:sticky md:top-20 md:h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar z-40">
+            <aside className="w-full md:w-72 bg-white border-r border-emerald-100 p-6 md:sticky md:top-0 md:h-screen md:pt-20 overflow-y-auto custom-scrollbar z-40">
 
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-2">
-                        <Filter className="text-rose-500" size={20} />
+                        {/* Updated icon color to emerald */}
+                        <Filter className="text-emerald-500" size={20} />
                         <h2 className="text-xl font-extrabold text-slate-900">Filters</h2>
                     </div>
                     <button
                         onClick={clearAllFilters}
-                        className="text-xs font-bold text-rose-500 hover:text-rose-700"
+                        // Updated reset link colors to emerald
+                        className="text-xs font-bold text-emerald-500 hover:text-emerald-700"
                     >
                         Reset
                     </button>
@@ -297,6 +316,7 @@ export default function DashboardPage() {
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Price Range</h3>
                     </div>
                     <div className="px-1">
+                        {/* PriceSlider component likely uses the primary color internally */}
                         <PriceSlider
                             min={priceBounds.min}
                             max={priceBounds.max}
@@ -314,17 +334,18 @@ export default function DashboardPage() {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Sellers</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                         {retailers.map(r => (
-                            <label key={r.seller_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
+                            <label key={r.seller_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-rose-500 checked:bg-rose-500 transition-all"
+                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-emerald-500 checked:bg-emerald-500 transition-all"
                                         checked={selectedRetailers.includes(r.seller_id)}
                                         onChange={() => toggleRetailer(r.seller_id)}
                                     />
                                     <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} strokeWidth={4} />
                                 </div>
-                                <span className="text-sm font-medium text-slate-600 group-hover:text-rose-600 transition-colors">{r.name}</span>
+                                {/* Updated hover text color to emerald */}
+                                <span className="text-sm font-medium text-slate-600 group-hover:text-emerald-600 transition-colors">{r.name}</span>
                             </label>
                         ))}
                         {retailers.length === 0 && <p className="text-sm text-slate-400 italic">No sellers found.</p>}
@@ -335,23 +356,18 @@ export default function DashboardPage() {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Categories</h3>
                     <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                         {categories.map(c => (
-                            <label key={c.category_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-50 cursor-pointer transition-colors group">
+                            <label key={c.category_id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-emerald-50 cursor-pointer transition-colors group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-rose-500 checked:bg-rose-500 transition-all"
+                                        className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-slate-200 checked:border-emerald-500 checked:bg-emerald-500 transition-all"
                                         checked={selectedCategories.includes(c.category_id)}
-                                        onChange={() =>
-                                            setSelectedCategories(prev =>
-                                                prev.includes(c.category_id)
-                                                    ? prev.filter(id => id !== c.category_id)
-                                                    : [...prev, c.category_id]
-                                            )
-                                        }
+                                        onChange={() => toggleCategory(c.category_id)}
                                     />
                                     <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={12} strokeWidth={4} />
                                 </div>
-                                <span className="text-sm font-medium text-slate-600 group-hover:text-rose-600 transition-colors">
+                                {/* Updated hover text color to emerald */}
+                                <span className="text-sm font-medium text-slate-600 group-hover:text-emerald-600 transition-colors">
                                     {c.category_name}
                                 </span>
                             </label>
@@ -366,7 +382,8 @@ export default function DashboardPage() {
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Max Dist (km)</label>
                         <input
                             type="number"
-                            className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none transition-all font-medium text-slate-700"
+                            // Kept emerald focus ring
+                            className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700"
                             placeholder="Any"
                             value={maxDistance}
                             onChange={(e) => setMaxDistance(e.target.value)}
@@ -376,21 +393,23 @@ export default function DashboardPage() {
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sort By</label>
                         <div className="relative">
                             <select
-                                className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none transition-all font-medium text-slate-700 text-sm appearance-none cursor-pointer"
+                                // Kept emerald focus ring
+                                className="w-full p-3 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all font-medium text-slate-700 text-sm appearance-none cursor-pointer"
                                 value={sortType}
                                 onChange={e => setSortType(e.target.value)}
                             >
                                 <option value="">Recommended</option>
                                 <option value="price_asc">Price: Low to High</option>
                                 <option value="price_desc">Price: High to Low</option>
-                                <option value="distance" disabled={coord?false:true}>Nearest Distance</option>
+                                <option value="distance" disabled={coord ? false : true}>Nearest Distance</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <button
-                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-rose-500 hover:shadow-rose-200 hover:-translate-y-0.5 transition-all duration-300"
+                    // Kept apply button hover color and shadow to emerald
+                    className="w-full py-3 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-emerald-500 hover:shadow-emerald-200 hover:-translate-y-0.5 transition-all duration-300"
                     onClick={() => applyFilters(false)}
                 >
                     Apply Filters
@@ -398,6 +417,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* ───────────────── MAIN CONTENT ───────────────── */}
+            {/* Background is now defined by the parent div (bg-slate-50) */}
             <main className="flex-1 p-6 sm:p-8">
 
                 {/* Top Header with Live Search */}
@@ -405,17 +425,20 @@ export default function DashboardPage() {
                     <div>
                         <h1 className="text-3xl font-extrabold text-slate-900">Marketplace</h1>
                         <p className="text-slate-500">
-                            Showing <span className="font-bold text-rose-500">{filtered.length}</span> items
+                            {/* Updated item count color to emerald */}
+                            Showing <span className="font-bold text-emerald-500">{filtered.length}</span> items
                         </p>
                     </div>
 
                     <div className="relative w-full md:w-96">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-rose-400" />
+                            {/* Updated search icon color to emerald */}
+                            <Search className="h-5 w-5 text-emerald-400" />
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-11 pr-4 py-3 bg-white border border-rose-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent shadow-sm transition-all"
+                            // Updated search input border and focus ring to emerald
+                            className="block w-full pl-11 pr-4 py-3 bg-white border border-emerald-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm transition-all"
                             placeholder="Search for items..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -425,19 +448,21 @@ export default function DashboardPage() {
 
                 {/* Product Grid */}
                 {loadingProducts ? (
-                    <div className="flex justify-center items-center h-64 text-rose-400 font-medium animate-pulse">
+                    <div className="flex justify-center items-center h-64 text-emerald-400 font-medium">
                         Updating results...
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-96 text-center bg-white rounded-[2rem] border border-rose-50">
-                        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-4">
-                            <Search className="text-rose-300" size={32} />
+                    // Updated the 'No products found' box for consistency
+                    <div className="flex flex-col items-center justify-center h-96 text-center bg-white rounded-[2rem] border border-slate-200 shadow-md">
+                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                            <Search className="text-emerald-300" size={32} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900">No products found</h3>
                         <p className="text-slate-500 mt-2 max-w-xs">Try adjusting your filters or search term.</p>
                         <button
                             onClick={clearAllFilters}
-                            className="mt-6 text-rose-600 font-bold hover:underline"
+                            // Updated clear filters link color to emerald
+                            className="mt-6 text-emerald-600 font-bold hover:underline"
                         >
                             Clear all filters
                         </button>
@@ -446,7 +471,7 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         {filtered.map(product => (
                             <div key={product.id} className="h-full">
-                                <ProductCard product={product} displayDist={true}/>
+                                <ProductCard product={product} displayDist={true} />
                             </div>
                         ))}
                     </div>

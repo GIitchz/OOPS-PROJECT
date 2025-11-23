@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ShoppingCart } from 'lucide-react';
 import { FilteredProductInterface, ListingInterface, ProductListingInterface } from "../utils/Interfaces";
 
-function ProductCard({ product, displayDist }: {product:FilteredProductInterface, displayDist: boolean}) {
+function ProductCard({ product, displayDist }: { product: FilteredProductInterface, displayDist: boolean }) {
     const { name, imageURL, listings } = product;
     const { addToCart } = useCart();
 
@@ -19,8 +19,6 @@ function ProductCard({ product, displayDist }: {product:FilteredProductInterface
             ?.filter(l => Number(l.stock) > 0)
             ?.sort((a, b) => a.distance_from_user - b.distance_from_user)[0] || null;
 
-    //console.log(displayDist, minDistListing)
-
     const handleAddToCart = (listing: ProductListingInterface) => {
         addToCart(listing.product_listings_id);
     };
@@ -29,8 +27,9 @@ function ProductCard({ product, displayDist }: {product:FilteredProductInterface
     return (
         <Link to={`/product/${product.id}`} className="group block h-full">
             <div className="bg-white rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
-                {/* Image Area */}
-                <div className="relative h-56 overflow-hidden bg-rose-50 p-4">
+                
+                {/* Image Area - Updated with a specific bottom-inner shadow. */}
+                <div className="relative h-56 overflow-hidden bg-emerald-50 p-4 **shadow-[0_4px_6px_-2px_inset_rgba(52,211,163,0.3)]**">
                     <img
                         src={imageURL || 'https://via.placeholder.com/300'}
                         alt={name}
@@ -56,14 +55,14 @@ function ProductCard({ product, displayDist }: {product:FilteredProductInterface
                                 <button
                                     onClick={(e) => { e.preventDefault(); handleAddToCart(minPriceListing) }}
                                     disabled={!minPriceListing}
-                                    className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                     title="Add Cheapest to Cart"
                                 >
                                     <ShoppingCart size={20} strokeWidth={2.5} />
                                 </button>
                             </div>
                         ) : (
-                            <span className="text-sm font-bold text-rose-400 bg-rose-50 px-3 py-1 rounded-full">
+                            <span className="text-sm font-bold text-red-400 bg-red-50 px-3 py-1 rounded-full">
                                 Sold Out
                             </span>
                         )}
@@ -82,7 +81,7 @@ function ProductCard({ product, displayDist }: {product:FilteredProductInterface
                                 <button
                                     onClick={(e) => { e.preventDefault(); handleAddToCart(minDistListing) }}
                                     disabled={!minDistListing}
-                                    className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white hover:shadow-lg hover:shadow-rose-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                    className="p-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                     title="Add Closest to Cart"
                                 >
                                     <ShoppingCart size={20} strokeWidth={2.5} />

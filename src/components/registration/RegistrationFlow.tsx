@@ -9,7 +9,7 @@ import { AlertTriangle } from 'lucide-react';
 const RegistrationFlow = () => {
   const [step, setStep] = useState(1);
   const [OAuthSignup, setOAuthSignup] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
 
   interface formDataInterface {
     email: string, password: string, role: "Customer" | "Retailer" | "Wholesaler", name: string, latitude: number | null, longitude: number | null
@@ -32,9 +32,7 @@ const RegistrationFlow = () => {
       if (session) {
         const { data } = await Supabase.from("users").select().match({ user_id: session.user.id }).maybeSingle();
         if (data) {
-          // ISSUE HERE: If 'data' exists, the user is registered. 
-          // The app should navigate to the dashboard, not the profile page.
-          // This behavior might be causing unexpected redirects if the browser history is confusing the router.
+          // If user is registered, navigate to the root/dashboard
           nav('/');
         }
         else {
@@ -109,22 +107,26 @@ const RegistrationFlow = () => {
 
   return (
     <div>
-      {/* Progress Bar (Increased text size and bar height) */}
+      {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3 px-1">
-          <span className={`text-sm font-bold ${step >= 1 ? 'text-rose-500' : 'text-slate-300'}`}>Account</span>
-          <span className={`text-sm font-bold ${step >= 2 ? 'text-rose-500' : 'text-slate-300'}`}>Details</span>
-          <span className={`text-sm font-bold ${step >= 3 ? 'text-rose-500' : 'text-slate-300'}`}>Verify</span>
+          {/* Step 1: Changed text-green-600 to text-emerald-600 */}
+          <span className={`text-sm font-bold ${step >= 1 ? 'text-emerald-600' : 'text-slate-300'}`}>Account</span>
+          {/* Step 2: Changed text-green-600 to text-emerald-600 */}
+          <span className={`text-sm font-bold ${step >= 2 ? 'text-emerald-600' : 'text-slate-300'}`}>Details</span>
+          {/* Step 3: Changed text-green-600 to text-emerald-600 */}
+          <span className={`text-sm font-bold ${step >= 3 ? 'text-emerald-600' : 'text-slate-300'}`}>Verify</span>
         </div>
         <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-rose-500 transition-all duration-500 ease-out"
+            // Progress bar fill: Changed bg-green-500 to bg-emerald-500
+            className="h-full bg-emerald-500 transition-all duration-500 ease-out"
             style={{ width: `${(step / 3) * 100}%` }}
           ></div>
         </div>
       </div>
 
-      {/* Error Display (Increased padding, text, and icon size) */}
+      {/* Error Display (Kept red for standard error) */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
           <AlertTriangle className="text-red-500 shrink-0" size={24} />
@@ -132,7 +134,7 @@ const RegistrationFlow = () => {
         </div>
       )}
 
-      {/* Steps */}
+      {/* Steps (unchanged props) */}
       {step === 1 && <Step1 onNext={handleNextStep} onChange={handleFormDataChange} initialFormData={formData} />}
       {step === 2 && <Step2 onNext={handleSubmit} onPrev={handlePreviousStep} onChange={handleFormDataChange} initialFormData={formData} />}
       {step === 3 && <Step3 />}

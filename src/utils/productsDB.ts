@@ -12,6 +12,7 @@ export interface FilterInterface {
     maxDist?: number;
     categoryIds?: string[];
     sellerIds?: string[];
+    blacklistSellerIds?: string[];
     orderBy?: 'relevance' | 'price' | 'distance';
     priceAsc?: boolean;
     limit?: number;
@@ -28,6 +29,7 @@ export async function getFilteredListings(filters: FilterInterface) {
         max_distance_param: filters.maxDist,
         category_ids_param: filters.categoryIds,
         seller_ids_param: filters.sellerIds,
+        blacklist_seller_ids_param: filters.blacklistSellerIds,
         order_by_param: filters.orderBy,
         price_asc_param: filters.priceAsc,
         limit_param: filters.limit

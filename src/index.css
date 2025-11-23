@@ -4,7 +4,11 @@
 
 @layer base {
   body {
-    @apply bg-rose-50 text-slate-800 antialiased;
+    /* 1. Updated background color from bg-green-50 to a subtle, neutral stone-50 
+      2. Using stone-50 here gives the primary app background a clean, neutral look, 
+         while emerald colors are used for accents in the React components.
+    */
+    @apply bg-stone-50 text-slate-800 antialiased; 
   }
 
   h1 {
@@ -26,14 +30,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  /* Kept slate/stone for neutral track or background */
+  background: #f1f5f9; /* slate-100 */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  /* Updated thumb color to a darker neutral (slate-400) */
+  background: #94a3b8; /* slate-400 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  /* Updated hover color to blend with the new theme (slate-500) */
+  background: #64748b; /* slate-500 */
 }

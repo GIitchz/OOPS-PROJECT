@@ -4,8 +4,10 @@ import { MailCheck } from 'lucide-react';
 const Step3 = () => {
     return (
         <div className="text-center py-8">
-            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6 animate-bounce">
-                <MailCheck className="h-10 w-10 text-green-600" />
+            {/* Icon Container: Changed bg-green-100 to bg-emerald-100 */}
+            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-emerald-100 mb-6 animate-bounce">
+                {/* Icon Color: Changed text-green-600 to text-emerald-600 */}
+                <MailCheck className="h-10 w-10 text-emerald-600" />
             </div>
 
             <h2 className="text-2xl font-extrabold text-slate-900 mb-2">
