@@ -103,6 +103,11 @@ export type OnlinePaymentInterface = {
     error: string|null;
 }
 
+export interface CategoryInterface {
+    category_id: string;
+    category_name: string;
+}
+
 export interface FilteredListingsInterface {
     product_id: string;
     product_name: string;
@@ -117,6 +122,7 @@ export interface FilteredListingsInterface {
     seller_id: string;
     seller_name: string;
     seller_role: 'customer' | 'retailer' | 'wholesaler';
+    categories: CategoryInterface[]
 }
 
 export interface FilteredProductInterface {
@@ -130,6 +136,7 @@ export interface FilteredProductInterface {
     minPrice: number;
     maxPrice: number;
     avgPrice: number;
+    categories: CategoryInterface[];
     listings: ListingInterface[];
     lowest_price: number | null;
 }

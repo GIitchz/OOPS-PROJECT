@@ -172,7 +172,6 @@ export async function getAllCategories() {
         console.error("Error fetching categories:", error);
         return [];
     }
-    console.log(data);
     // Standardize naming so frontend stays clean
     return data.map(cat => ({
         category_id: cat.category_id,

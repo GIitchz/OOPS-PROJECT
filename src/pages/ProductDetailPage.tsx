@@ -1,13 +1,213 @@
+// ProductDetailPage.tsx (Complete Refactored Code)
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { getProductById, getListingReviews } from "../utils/Database";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { ShoppingCart, Package, Store, AlertCircle, ChevronDown, ArrowLeft, Star, User } from "lucide-react"; // Added User icon
+import { ShoppingCart, Package, Store, AlertCircle, ArrowLeft, Star, User, Tag, MapPin } from "lucide-react"; 
 import { PostgrestError } from "@supabase/supabase-js";
-import { FilteredProductInterface, ListingInterface, ReviewInterface } from "../utils/Interfaces";
+import { FilteredProductInterface, ListingInterface, ReviewInterface, CategoryInterface } from "../utils/Interfaces"; 
+import { FilterInterface, getFilteredListings, groupListingsByProduct } from "../utils/productsDB";
+
+// 🚀 TYPE DEFINITION FOR SORTING
+type ListingSortOption = 'price_asc' | 'price_desc' | 'stock_desc' | 'distance_asc' | 'name_asc'; 
+
+// --- CategoryTags Component ---
+interface CategoryTagsProps {
+    categories: CategoryInterface[];
+}
+const CategoryTags: React.FC<CategoryTagsProps> = ({ categories }) => {
+    if (categories.length === 0) return null;
+    return (
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+            <Tag size={16} className="text-rose-500 flex-shrink-0" />
+            {categories.map((category) => (
+                <span 
+                    key={category.category_id}
+                    className="inline-block px-3 py-1 text-sm font-semibold text-rose-800 bg-rose-100 rounded-full border border-rose-300"
+                >
+                    {category.category_name}
+                </span>
+            ))}
+        </div>
+    );
+};
+
+// --- StarRating Component ---
+const StarRating = ({ rating, size = 18 }: { rating: number, size?: number }) => (
+    <div className="flex items-center">
+        {Array.from({ length: 5 }, (_, i) => (
+            <Star
+                key={i}
+                size={size}
+                fill={i < rating ? "#fbbf24" : "#e5e7eb"} // Amber-400 fill
+                color={i < rating ? "#fbbf24" : "#d1d5db"} // Gray-300 stroke
+                className="mr-0.5 transition-colors"
+            />
+        ))}
+    </div>
+);
+
+// --- SellerList Component ---
+interface SellerListProps {
+    listings: ListingInterface[];
+    selectedListing: ListingInterface | null;
+    setSelectedListing: (listing: ListingInterface) => void;
+    targetRole: string;
+    currentSort: ListingSortOption; 
+    setSort: (sort: ListingSortOption) => void; 
+}
+
+const SellerList: React.FC<SellerListProps> = ({ listings, selectedListing, setSelectedListing, targetRole, currentSort, setSort }) => {
+    
+    // Check if any listing has distance data to enable the sort option
+    const isDistanceAvailable = listings.some(l => typeof l.distance_from_user === 'number');
+
+    const sortedListings = useMemo(() => {
+        const listCopy = [...listings];
+        
+        // --- Core Sorting Logic Implementation ---
+        listCopy.sort((a, b) => {
+            // 1. Availability Priority (always stock first)
+            const aAvailable = a.stock > 0;
+            const bAvailable = b.stock > 0;
+
+            if (aAvailable && !bAvailable) return -1;
+            if (!aAvailable && bAvailable) return 1;
+
+            // 2. Apply selected secondary sort if both are available/unavailable
+            switch (currentSort) {
+                case 'price_asc':
+                    return a.price - b.price;
+                case 'price_desc':
+                    return b.price - a.price;
+                case 'stock_desc':
+                    return b.stock - a.stock;
+                case 'distance_asc':
+                    // Use Infinity for undefined/null distances to push them to the end
+                    const aDist = a.distance_from_user ?? Infinity;
+                    const bDist = b.distance_from_user ?? Infinity;
+                    return aDist - bDist;
+                case 'name_asc':
+                    const aName = a.seller?.name || "";
+                    const bName = b.seller?.name || "";
+                    return aName.localeCompare(bName);
+                default:
+                    return a.price - b.price; // Default fallback
+            }
+        });
+        
+        return listCopy;
+    }, [listings, currentSort]);
+
+    // Handle distance sort option removal if data disappears
+    useEffect(() => {
+        if (!isDistanceAvailable && currentSort === 'distance_asc') {
+            // Revert to a valid sort option
+            setSort('price_asc'); 
+        }
+    }, [isDistanceAvailable, currentSort, setSort]);
 
 
+    return (
+        <div className="bg-white rounded-xl p-6 mb-8 border border-rose-200 shadow-inner">
+            <div className="flex justify-between items-center mb-4">
+                <label className="flex items-center gap-2 text-base font-bold text-rose-700">
+                    <Store size={20} className="text-rose-500" />
+                    Select a {targetRole === 'wholesaler' ? 'Wholesaler' : 'Retailer'}
+                </label>
+                
+                {/* Dropdown for Ordering */}
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <label htmlFor="listing-sort" className="font-medium">Sort By:</label>
+                    <select
+                        id="listing-sort"
+                        className="p-1.5 border border-slate-300 rounded-lg bg-white focus:ring-rose-500 focus:border-rose-500 text-sm font-medium transition-shadow"
+                        value={currentSort}
+                        onChange={(e) => setSort(e.target.value as ListingSortOption)}
+                    >
+                        <option value="price_asc">Price (Low to High)</option>
+                        <option value="price_desc">Price (High to Low)</option>
+                        <option value="stock_desc">Stock (Highest First)</option>
+                        {/* CONDITIONAL DISTANCE OPTION */}
+                        {isDistanceAvailable && (
+                            <option value="distance_asc">Distance (Nearest)</option>
+                        )}
+                        <option value="name_asc">Seller Name (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Scrollable Container */}
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                {sortedListings.map((l) => {
+                    const isSelected = l.product_listings_id === selectedListing?.product_listings_id;
+                    const isAvailable = l.stock > 0;
+                    
+                    // Display distance
+                    const distance = typeof l.distance_from_user === 'number'
+                        ? `${l.distance_from_user.toFixed(1)} km`
+                        : null;
+
+                    return (
+                        <div
+                            key={l.product_listings_id}
+                            className={`
+                                flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                                ${isSelected
+                                    ? 'border-rose-500 bg-rose-50 shadow-md'
+                                    : 'border-slate-200 bg-gray-50 hover:bg-gray-100 hover:border-rose-300'
+                                }
+                                ${!isAvailable && 'opacity-60 grayscale-[5%] pointer-events-none'}
+                            `}
+                            onClick={() => isAvailable && setSelectedListing(l)}
+                            title={!isAvailable ? 'Out of Stock' : ''}
+                        >
+                            <div className="flex-shrink-0 flex-grow mr-4 min-w-[50%]"> 
+                                <p className="text-lg font-bold text-slate-900">
+                                    {l.seller?.name ?? "Unknown Seller"}
+                                </p>
+                                {/* DISPLAY DISTANCE BELOW SELLER NAME */}
+                                {distance && (
+                                    <div className="flex items-center text-sm text-slate-500 mt-1">
+                                        <MapPin size={14} className="text-rose-400 mr-1" />
+                                        {distance}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="text-right flex-shrink-0"> 
+                                <p className="text-xl font-extrabold text-rose-600 mb-0.5">
+                                    ₹{l.price.toFixed(2)}
+                                </p>
+                                <span className={`text-xs font-semibold ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
+                                    {isAvailable ? `In Stock: ${l.stock}` : 'OUT OF STOCK'}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Simple CSS for custom scrollbar (unchanged) */}
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: #fca5a5; /* rose-300 */
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background-color: #fef2f2; /* rose-50 */
+                }
+            `}</style>
+        </div>
+    );
+};
+
+// --- ProductDetailPage Component ---
 function ProductDetailPage() {
     const { user } = useAuth();
     const { productId } = useParams();
@@ -18,6 +218,9 @@ function ProductDetailPage() {
     const [product, setProduct] = useState<FilteredProductInterface | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedListing, setSelectedListing] = useState<ListingInterface | null>(null);
+    
+    // State to control the sorting dropdown
+    const [listingSort, setListingSort] = useState<ListingSortOption>('price_asc'); 
 
     const [reviews, setReviews] = useState<ReviewInterface[]>([]);
     const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -25,42 +228,96 @@ function ProductDetailPage() {
 
     const { addToCart } = useCart();
 
-    const targetSellerRole = user?.role === 'retailer' ? 'wholesaler' : 'retailer';
+    const [coord, setCoord] = useState<{ lat: number, lng: number } | null>(null);
 
-    useEffect(() => {
-        const loadProduct = async () => {
-            if (!productId) return;
-            setLoading(true);
-
-            const data = await getProductById(productId);
-
-            if (data) {
-                setProduct(data);
-
-                if (data.listings.length > 0) {
-                    let defaultListing: ListingInterface | undefined;
-
-                    if (initialListingId) {
-                        defaultListing = data.listings.find(
-                            (l) => l.product_listings_id === initialListingId
-                        );
+    const getCurrentLocation = async (): Promise<{ lat: number, lng: number } | null> => {
+        return new Promise((resolve) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude: lat, longitude: lng } = position.coords;
+                        resolve({ lat, lng });
+                    },
+                    (error) => {
+                        console.error("Error getting location: ", error);
+                        resolve(null);
                     }
+                );
+            } else {
+                console.error("Geolocation not supported");
+                resolve(null);
+            }
+        });
+    };
 
-                    if (!defaultListing) {
-                        const sorted = data.listings.sort((a, b) => a.price - b.price);
-                        defaultListing = sorted.find((l) => l.stock > 0) || sorted[0];
-                    }
 
-                    if (defaultListing) {
-                        setSelectedListing(defaultListing);
-                    }
+    const loadProduct = async () => {
+        setLoading(true);
+        
+        let currentCoord = null;
+
+        // 1. Try to get real-time geolocation
+        const newCoord = await getCurrentLocation();
+        if (newCoord) {
+            currentCoord = newCoord;
+            setCoord(newCoord);
+        } else if (user && user.location) {
+            // 2. Fallback to user's saved location
+            currentCoord = { lat: user.location.latitude, lng: user.location.longitude };
+            setCoord(currentCoord);
+        }
+
+        // 3. Prepare the base filter
+        let baseFilter: FilterInterface = {};
+
+        // Apply coordinates if found (needed for proximity filtering in RPC)
+        if (currentCoord) {
+            baseFilter.distFrom = currentCoord;
+        }
+
+        baseFilter.productId=productId;
+        const data = await getFilteredListings(baseFilter);
+        if (data) {
+            const prod = groupListingsByProduct(data)[0];
+            setProduct(prod);
+            if (prod.listings.length > 0) {
+                let defaultListing: ListingInterface | undefined;
+                
+                // 1. Try to find the listing specified in search params
+                if (initialListingId) {
+                    defaultListing = prod.listings.find(
+                        (l) => l.product_listings_id === initialListingId
+                    );
+                }
+
+                // 2. If no initial or if initial is unavailable, find the best available (lowest price, in stock)
+                if (!defaultListing) {
+                    const stockedListings = prod.listings.filter(l => l.stock > 0);
+                    const sorted = stockedListings.length > 0
+                        ? stockedListings.sort((a, b) => a.price - b.price)
+                        : prod.listings.sort((a, b) => a.price - b.price); // Fallback to lowest price even if OOS
+                        
+                    defaultListing = sorted[0];
+                }
+
+
+                if (defaultListing) {
+                    setSelectedListing(defaultListing);
                 }
             }
-            setLoading(false);
-        };
-        loadProduct();
-    }, [productId, initialListingId]);
+        }
 
+        setLoading(false);
+    }
+
+    const targetSellerRole = user?.role === 'retailer' ? 'wholesaler' : 'retailer';
+
+    // Fetch product details
+    useEffect(() => {
+        loadProduct();
+    }, [productId, initialListingId]); 
+
+    // Fetch reviews for the selected listing
     useEffect(() => {
         const loadReviews = async () => {
             if (!selectedListing) {
@@ -86,6 +343,7 @@ function ProductDetailPage() {
         loadReviews();
     }, [selectedListing]);
 
+    // Calculate aggregate rating
     const aggregateRating = useMemo(() => {
         if (reviews.length === 0) return { average: 0, count: 0 };
 
@@ -127,33 +385,9 @@ function ProductDetailPage() {
 
     const isInStock = (selectedListing?.stock || 0) > 0;
 
-    const handleSellerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const listingId = e.target.value;
-        const chosen = product.listings.find((l) => l.product_listings_id === listingId);
-        if (chosen) setSelectedListing(chosen);
-    };
-
     const handleAddToCart = () => {
         if (selectedListing) addToCart(selectedListing.product_listings_id);
     };
-
-    const availableListings = product.listings.filter(l => l.stock > 0);
-    const dropdownOptions = availableListings.length > 0 ? availableListings : product.listings;
-
-    // Helper component for Star Rating
-    const StarRating = ({ rating, size = 18 }: { rating: number, size?: number }) => (
-        <div className="flex items-center">
-            {Array.from({ length: 5 }, (_, i) => (
-                <Star
-                    key={i}
-                    size={size}
-                    fill={i < rating ? "#fbbf24" : "#e5e7eb"} // Amber-400 fill
-                    color={i < rating ? "#fbbf24" : "#d1d5db"} // Gray-300 stroke
-                    className="mr-0.5 transition-colors"
-                />
-            ))}
-        </div>
-    );
 
     return (
         <div className="min-h-[calc(100vh-80px)] bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -188,6 +422,9 @@ function ProductDetailPage() {
                                 <h1 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight leading-snug">
                                     {product.name}
                                 </h1>
+
+                                <CategoryTags categories={product.categories} />
+                                
                                 <p className="text-lg text-slate-600 mb-8 leading-relaxed border-b border-slate-100 pb-8">
                                     {product.description || "Fresh, locally sourced, and ready for delivery directly to your doorstep."}
                                 </p>
@@ -220,28 +457,22 @@ function ProductDetailPage() {
                                 {/* End Rating & Stock */}
 
 
-                                <div className="bg-white rounded-xl p-6 mb-8 border border-rose-200 shadow-inner">
-                                    <label className="flex items-center gap-2 text-base font-bold text-rose-700 mb-4">
-                                        <Store size={20} className="text-rose-500" />
-                                        Select a {targetSellerRole === 'wholesaler' ? 'Wholesaler' : 'Retailer'}
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            className="appearance-none block w-full pl-4 pr-12 py-3 text-lg font-semibold text-slate-800 bg-gray-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer shadow-md hover:border-rose-400"
-                                            value={selectedListing?.product_listings_id || ""}
-                                            onChange={handleSellerChange}
-                                        >
-                                            {dropdownOptions.map((l) => (
-                                                <option key={l.product_listings_id} value={l.product_listings_id}>
-                                                    {l.seller?.name ?? "Unknown Seller"} — ₹{l.price}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-rose-500">
-                                            <ChevronDown size={20} strokeWidth={2.5} />
-                                        </div>
+                                {/* Seller List: Passing sorting logic */}
+                                {product.listings.length > 0 ? (
+                                    <SellerList
+                                        listings={product.listings}
+                                        selectedListing={selectedListing}
+                                        setSelectedListing={setSelectedListing}
+                                        targetRole={targetSellerRole}
+                                        currentSort={listingSort}
+                                        setSort={setListingSort}
+                                    />
+                                ) : (
+                                    <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium">
+                                        <AlertCircle size={20} className="inline mr-2" />
+                                        No listings available for this product.
                                     </div>
-                                </div>
+                                )}
                             </div>
 
                             <div className="border-t border-slate-100 pt-8 mt-4">
@@ -249,7 +480,7 @@ function ProductDetailPage() {
                                     <div>
                                         <p className="text-base text-slate-500 mb-1 font-medium">Your Selected Price</p>
                                         <p className="text-5xl font-extrabold text-rose-600">
-                                            ₹{selectedListing?.price || "0"}
+                                            ₹{selectedListing?.price.toFixed(2) || "0.00"}
                                         </p>
                                     </div>
                                 </div>
@@ -283,7 +514,7 @@ function ProductDetailPage() {
                     {reviewsError && (
                         <div className="bg-red-50 border border-red-300 p-6 rounded-xl text-red-700 text-center shadow-md">
                             <AlertCircle size={24} className="inline mr-2" />
-                            **Error loading reviews:** {reviewsError.message}
+                            <span className="font-bold">Error loading reviews:</span> {reviewsError.message}
                         </div>
                     )}
 
@@ -297,7 +528,7 @@ function ProductDetailPage() {
                                     </p>
                                     <StarRating rating={Math.round(aggregateRating.average)} size={30} />
                                     <p className="text-lg text-slate-600 mt-4 font-medium">
-                                        Based on **{aggregateRating.count}** verified customer reviews
+                                        Based on <span className="font-bold">{aggregateRating.count}</span> verified customer reviews
                                     </p>
                                     <p className="text-sm text-slate-400 mt-2">
                                         Reviews are for the selected seller listing.
@@ -324,7 +555,7 @@ function ProductDetailPage() {
                                                 
                                                 <div className="flex items-center text-sm font-semibold text-slate-600 border-t border-slate-50 pt-3 mt-3">
                                                     <User size={16} className="text-rose-500 mr-2" />
-                                                    **{review.buyer.name}**
+                                                    <span className="font-bold">{review.buyer.name}</span>
                                                     <span className="ml-2 px-2 py-0.5 bg-rose-50 text-rose-600 rounded-full text-xs font-bold uppercase tracking-wider">
                                                         {review.buyer.role}
                                                     </span>
@@ -335,7 +566,7 @@ function ProductDetailPage() {
                                 ) : (
                                     <div className="text-slate-500 text-center py-12 bg-white rounded-2xl shadow-lg border border-slate-200">
                                         <h3 className="text-xl font-semibold mb-2">No Customer Feedback Yet!</h3>
-                                        <p>Be the first to review this item from **{selectedListing?.seller?.name ?? "this seller"}**.</p>
+                                        <p>Be the first to review this item from <span className="font-bold">{selectedListing?.seller?.name ?? "this seller"}</span>.</p>
                                     </div>
                                 )}
                             </div>

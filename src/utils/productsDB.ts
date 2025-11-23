@@ -1,7 +1,7 @@
 // utils/productsDB.ts
 
 import Supabase from "./Database";
-import { FilteredListingsInterface, FilteredProductInterface, ListingInterface } from "./Interfaces";
+import { CategoryInterface, FilteredListingsInterface, FilteredProductInterface, ListingInterface } from "./Interfaces";
 
 export interface FilterInterface {
     searchTerm?: string;
@@ -30,7 +30,7 @@ export async function getFilteredListings(filters: FilterInterface) {
         seller_ids_param: filters.sellerIds,
         order_by_param: filters.orderBy,
         price_asc_param: filters.priceAsc,
-        limit_param: filters.limit,
+        limit_param: filters.limit
     };
 
     const { data, error } = await Supabase.rpc('get_filtered_products', rpcArgs);
@@ -43,24 +43,46 @@ export async function getFilteredListings(filters: FilterInterface) {
     }
 }
 
-export function groupListingsByProduct(listings: FilteredListingsInterface[]): FilteredProductInterface[] {
+// 1. Define the internal structure for accumulation
+// This replaces the unsafe 'data: any'
+interface ProductAccumulator {
+    id: string;
+    name: string;
+    description: string | null;
+    imageURL: string | null;
+    categoryIDs: string[];
+    relevance: number;
+    total_price: number; // Used to calculate avgPrice later
+    count: number;       // Used to calculate avgPrice later
+}
 
-    const productMap = new Map<string, {
-        // Removed Omit complexity to avoid type errors
-        data: any,
-        listings: ListingInterface[],
-        minDistance: number,
-        minPrice: number,
-        maxPrice: number,
-    }>();
+// 2. Define the exact shape of the value stored in the Map
+interface GroupedProductData {
+    productData: ProductAccumulator,
+    listings: ListingInterface[],
+    minDistance: number,
+    minPrice: number,
+    maxPrice: number,
+    categories: CategoryInterface[] // Full category info array
+}
+
+
+export function groupListingsByProduct(
+    listings: FilteredListingsInterface[]
+): FilteredProductInterface[] {
+
+    // Use the type-safe interface for the Map value
+    const productMap = new Map<string, GroupedProductData>();
 
     for (const item of listings) {
         const {
             product_id, product_name, product_description, product_image_url, category_ids, relevance_score,
             listing_id, price, stock, distance_km,
-            seller_id, seller_name, seller_role
+            seller_id, seller_name, seller_role, categories
         } = item;
 
+        // 1. Construct the ListingInterface object
+        // NOTE: The ListingInterface needs to be strictly compatible with the destination fields.
         const listing: ListingInterface = {
             product_listings_id: listing_id,
             price,
@@ -69,61 +91,75 @@ export function groupListingsByProduct(listings: FilteredListingsInterface[]): F
             distance_from_user: distance_km,
             seller: {
                 name: seller_name,
-                user_role: seller_role,
+                // The provided ListingInterface uses 'user_role?:' but FilteredListingsInterface uses 'seller_role'
+                // We use 'user_role' to match the ListingInterface structure.
+                user_role: seller_role, 
             },
             productInfo: {
                 product_id: product_id,
                 name: product_name,
                 description: product_description,
                 image_url: product_image_url
+                // NOTE: ListingInterface's productInfo does not include 'categories' or 'categoryIDs',
+                // but the FilteredProductInterface uses 'categories' from the main listing.
             }
         };
 
         if (productMap.has(product_id)) {
+            // 2. Update existing product group
             const existing = productMap.get(product_id)!;
             existing.listings.push(listing);
-            existing.data.total_price += price;
-            existing.data.count += 1;
+            // Access properties on the new 'productData' field
+            existing.productData.total_price += price;
+            existing.productData.count += 1;
             existing.minDistance = Math.min(existing.minDistance, distance_km);
             existing.minPrice = Math.min(existing.minPrice, price);
             existing.maxPrice = Math.max(existing.maxPrice, price);
-
+            // Assuming categories is the same for all listings of this product_id, 
+            // but we can update it if the source array is valid.
+            existing.categories = categories; 
         } else {
+            // 3. Create a new product group
             productMap.set(product_id, {
-                data: {
+                productData: { // Replaced 'data' with 'productData' and defined its structure
                     id: product_id,
                     name: product_name,
                     description: product_description,
                     imageURL: product_image_url,
                     categoryIDs: category_ids || [],
                     relevance: relevance_score,
-                    total_price: price,
-                    count: 1,
+                    total_price: price, // Start accumulator
+                    count: 1,           // Start count
                 },
                 listings: [listing],
                 minDistance: distance_km,
                 minPrice: price,
                 maxPrice: price,
+                categories: categories
             });
         }
     }
 
+    // 4. Transform the Map values into the final FilteredProductInterface array
     return Array.from(productMap.values()).map(grouped => {
-        const { data, listings, minDistance, minPrice, maxPrice } = grouped;
+        const { productData, listings, minDistance, minPrice, maxPrice, categories } = grouped;
 
         return {
-            id: data.id,
-            name: data.name,
-            description: data.description,
-            imageURL: data.imageURL,
-            categoryIDs: data.categoryIDs,
-            relevance: data.relevance,
+            id: productData.id,
+            name: productData.name,
+            description: productData.description,
+            imageURL: productData.imageURL,
+            categoryIDs: productData.categoryIDs,
+            relevance: productData.relevance,
             minDist: minDistance,
             minPrice: minPrice,
-            avgPrice: data.total_price / data.count,
             maxPrice: maxPrice,
-            lowest_price: minPrice,
+            // Calculate avgPrice from accumulated total and count
+            avgPrice: productData.total_price / productData.count,
+            categories: categories, // Ensure categories are included
             listings: listings,
+            // Maps to minPrice, matching the original logic but typed as number | null
+            lowest_price: minPrice, 
         };
     });
 }
