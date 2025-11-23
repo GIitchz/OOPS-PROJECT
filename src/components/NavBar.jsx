@@ -13,8 +13,9 @@ function NavBar() {
     const cartItemCount = cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
 
     const handleLogout = async () => {
-        await logout();
         navigate('/');
+        await logout();
+        
     };
 
     const getRoleLandingPath = (role) => {
